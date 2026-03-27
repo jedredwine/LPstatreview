@@ -27,16 +27,17 @@ library(ggplot2)
 psu <- read.csv('./data/processed/LP_R&S_C123_Yr1-5_PSU_Sampled.csv')
 head(psu)
 nrow(psu)
+#-------------------------------------------------------------------------------
 
+# Summarize PSU count by Region and Cycle
+
+# convert to LF
 psu.rgn.cyc_lf <- psu[,c('PSU_ID','Region','C1','C2','C3')] %>%
   pivot_longer(
     cols = c(C1,C2,C3),
     names_to = 'Cycle_Name',
     values_to = 'Cycle'
   )
-#-------------------------------------------------------------------------------
-
-# Summarize PSU count by Region and Cycle
 
 # table to plot
 psu.rgn.cyc_lf.plt <- as.data.frame(table(psu.rgn.cyc_lf$Region,psu.rgn.cyc_lf$Cycle))
@@ -56,6 +57,7 @@ ggsave("./figures/psus_byRegionCycle.jpg", plot = psu.rgn.cycl_plot, width = 4, 
 
 # Summarize PSU plot count by Region and Year
 
+# convert to LF
 psu.plt.rgn.cyc_lf <- psu[,c('PSU_ID','Region','C1_plot_count','C2_plot_count','C3_plot_count')] %>%
   pivot_longer(
     cols = c(C1_plot_count,C2_plot_count,C3_plot_count),
@@ -81,6 +83,31 @@ psu.plt.rgn.cyc_plt <- ggplot(psu.plt.rgn.cyc_lf.plot, aes(x=Cycle_VarName,y=Reg
   theme_minimal()
 
 ggsave("./figures/psus_plotCount_byRegionCycle.jpg", plot = psu.plt.rgn.cyc_plt, width = 6, height = 4, dpi = 400, device = "jpeg")
+#-------------------------------------------------------------------------------
+
+# Summarize PSU plot count by Cycle
+
+# convert to LF
+psu.plt.rgn.cyc_lf <- psu[,c('PSU_ID','Region','C1_plot_count','C2_plot_count','C3_plot_count')] %>%
+  pivot_longer(
+    cols = c(C1_plot_count,C2_plot_count,C3_plot_count),
+    names_to = 'Cycle_VarName',
+    values_to = 'plot_count'
+  )
+
+# convert plot count from character to integer
+psu.plt.rgn.cyc_lf$plot_count <- as.integer(psu.plt.rgn.cyc_lf$plot_count)
+
+# plot and save to jpeg
+psu.plt.cyc_plt <- ggplot(psu.plt.rgn.cyc_lf, aes(x=Cycle_VarName,y=PSU_ID, fill=plot_count)) +
+  geom_tile() +
+  geom_text(aes(label=plot_count),color="black",size=3) +
+  scale_fill_gradient(low='white',high='slateblue') +
+  scale_x_discrete(labels=c("Cycle 1","Cycle 2","Cycle 3")) +
+  labs(x='Cycle',fill = "Plot Count") +
+  theme_minimal()
+
+ggsave("./figures/psus_plotCount_byCycle.jpg", plot = psu.plt.cyc_plt, width = 4, height = 10, dpi = 400, device = "jpeg")
 #-------------------------------------------------------------------------------
 
 
