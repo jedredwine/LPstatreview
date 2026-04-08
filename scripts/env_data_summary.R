@@ -14,12 +14,20 @@ library(ggplot2)
 #-------------------------------------------------------------------------------
 
 # load ENV data (Jay Sah raw data table converted to .csv modified column names)
-env <- read.csv('./data/processed/envData.csv')
+env <- read.csv('./data/processed/envData_cln.csv')
 head(env)
 nrow(env)
 
 # generate PSU and PLOT_ID
 env <- separate(env, PLOT_ID, into = c('PSU','PLOT'),sep = c(4))
+
+# check NA status for location & elevation
+table(is.na(env$EAST_UTM_NAD83))
+table(is.na(env$NORTH_UTM_NAD83))
+table(is.na(env$GR_ELEV))
+
+# check habitat classes
+as.data.frame(table(env$HABITAT))
 
 # ------------------------------------------------------------------------------
 # plot ELE and save to jpeg
