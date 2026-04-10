@@ -21,24 +21,28 @@ nrow(env)
 # # generate PSU and PLOT_ID -- first time only then save
 # env <- separate(env, PLOT_ID, into = c('PSU','PLOT'),sep = c(4))
 
-# check NA status for location & elevation
+# check NA status for location --> remove because point might fall outside cluster distance tolerance 
+# check NA status for location --> elevation
 table(is.na(env$EAST_UTM_NAD83))
 table(is.na(env$NORTH_UTM_NAD83))
-table(is.na(env$GR_ELEV))
+table(!is.na(env$GR_ELEV))
+
+env[is.na(env$EAST_UTM_NAD83),]
 
 # check for WD errors
 env$WD_SD <- apply(env[, c("WD1","WD2","WD3")], 1, function(x) sd(x, na.rm=TRUE))
-env[env$WD_SD > 10 ,]
+env$WD_SD[!is.na(env$WD_SD) & env$WD_SD > 50]
 
 # check habitat classes and MAP classes
-as.data.frame(table(env$HABITAT_L2))                # typos fixed, but classes are still redundant or inconsitent in descriptors
-as.data.frame(table(env$MAP_CLASS))                 # many non-map class labels
+as.data.frame(table(env$HABITAT_L2))                # typos fixed, but classes are still redundant or inconsistent in descriptors
+as.data.frame(table(env$MAP_CLASS)) # -- omit                # many non-map class labels
 
-# chack HABITAT_L2 against MAP_CLASS
+# dropping sites that are outside of PSU boundary and those > 80 (added in cycle 3)
+# check HABITAT_L2 against MAP_CLASS # -- omit
 table(env$HABITAT_L2,env$MAP_CLASS)
 # ------------------------------------------------------------------------------
 # plot ELE and save to jpeg
-psu.ELE.HAB <- ggplot(env, aes(x=PSU,y=GR_ELEV,fill=HABITAT)) +
+psu.ELE.HAB <- ggplot(env, aes(x=PSU,y=GR_ELEV,fill=HABITAT_L2)) +
   geom_boxplot() +
   # geom_text(aes(label=Freq),color="black",size=3) +
   # scale_fill_gradient(low='white',high='slateblue') +
