@@ -1,0 +1,8 @@
+""," PlotID_New","    ele_sd","  ele_range"
+"","Length:10011      ","Min.   : 0.000  ","Min.   : -Inf  "
+"","Class :character  ","1st Qu.: 2.329  ","1st Qu.:  0.0  "
+"","Mode  :character  ","Median : 4.000  ","Median :  4.7  "
+"",NA,"Mean   : 5.290  ","Mean   : -Inf  "
+"",NA,"3rd Qu.: 6.758  ","3rd Qu.:  9.7  "
+"",NA,"Max.   :62.404  ","Max.   :122.0  "
+"",NA,"NA's   :3292  ",NA
