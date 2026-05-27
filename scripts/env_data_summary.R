@@ -73,14 +73,18 @@ library(ggplot2)
 # non-random PSUs still present -- removed for analysis
 # 
 
-# load PSU shapefile
+# load PSU shapefile with final approved LS analysis PSUs
 psu_sp <- st_read('./data/PSU_RS_LS.shp')
-x11();plot(psu_sp$PSU_Type)
-psus_sample_type <- ggplot() + 
-  geom_sf(data = psu_sp, aes(fill = PSU_Type))
+x11()
+psus_region <- ggplot() + 
+  geom_sf(data = psu_sp, aes(fill = Region))
 
-ggsave("./figures/psus_sample_type.jpg", plot = psus_sample_type, width = 4, height = 6, dpi = 400, device = "jpeg")
+# PSU list
+psu_list <- psu_sp$PSU_N
+length(psu_list)
 
+# save plot
+ggsave("./figures/psus_x_region.jpg", plot = psus_region, width = 4, height = 6, dpi = 400, device = "jpeg")
 # ==============================================================================
 # load ENV data (Jay Sah raw data table (2026-05-16) converted to .csv, column names fixed: no underscores at beginning, changed: WD_mean_cm, Class, EDEN_based_elev_cm CLAJAM_ht_cm)
 loc <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_locations.csv')
@@ -91,14 +95,13 @@ nrow(env)
 table(is.na(env$X_NAD83))
 table(is.na(env$Y_NAD83))
 table(!is.na(env$EDEN_based_elev_cm))
+# ------------------------------------------------------------------------------
+# subset plots to final PSU list
+env <- env[env$PSU %in% psu_list,]
 
 # check PSUs
 table(env$PSUID)
 length(unique(env$PSUID))
-
-# remove non-random PSUs
-env <- env[!env$PSUID %in% c("PBS1","PBS2","PBS3","PDPM"),] 
-nrow(env)
 # ------------------------------------------------------------------------------
 
 # PLOT LEVEL QA/QC
@@ -163,7 +166,7 @@ intersecting_pts <- plot_psu_sp %>% filter(!is.na(PSU_ID))
 
 plot_psu_sp_noPSU <- intersecting_pts[intersecting_pts$PSUID != intersecting_pts$PSU_ID,]
 
-#write summary to csv
+# write summary to csv
 write.csv(as.data.frame(non_intersecting_pts)[,c("C123Merged_EnvSNO","C123_Plot_SNO","PlotID_New","PSUID","Cycle.x","Cycle_Year")],'./analysis/plot_no_psu.csv')
 
 # ------------------------------------------------------------------------------
@@ -200,8 +203,31 @@ plot.elev.rng <- ggplot(ele_test[!is.na(ele_test$ele_range),], aes(x='All Plots'
   theme_minimal()
 
 ggsave("./figures/plot_elev_rng.jpg", plot = plot.elev.rng, width = 5, height = 5, dpi = 400, device = "jpeg")
+# = = = = = = = = = = = =
+# check derived elevation consistency across cycles 2 & 3
+ele_test_c23 <- env[env$Cycle == "C1" | env$Cycle == "C2",] %>%
+  group_by(PlotID_New) %>%
+  summarise(ele_sd = sd(EDEN_based_elev_cm),
+            ele_range = max(EDEN_based_elev_cm, na.rm = TRUE) - min(EDEN_based_elev_cm, na.rm = TRUE))
+# ----------------------
+# write summary to csv
+write.csv(ele_test_2,'./analysis/plot_elevation_consistency_C1&C2.csv')
+# ----------------------
+# plot standard deviations
+plot.elev.c1c2.sd <- ggplot(ele_test_c23[!is.na(ele_test_c23$ele_sd),], aes(x='',y=ele_sd)) +
+  geom_boxplot() +
+  labs(x='All Plots', y='Elevation SD (cm)') +
+  theme_minimal()
 
-write.csv(summary(ele_test),'./analysis/plot_elevation_consistency.csv')
+ggsave("./figures/plot_elev_C1C2_sd.jpg", plot = plot.elev.c1c2.sd, width = 5, height = 5, dpi = 400, device = "jpeg")
+# ----------------------
+# plot range
+plot.elev.c1c2rng <- ggplot(ele_test_c23[!is.na(ele_test_c23$ele_range),], aes(x='All Plots',y=ele_range)) +
+  geom_boxplot() +
+  labs(x='', y='Elevation Range (cm)') +
+  theme_minimal()
+
+ggsave("./figures/plot_elev_C1C2_rng.jpg", plot = plot.elev.c1c2.rng, width = 5, height = 5, dpi = 400, device = "jpeg")
 # ------------------------------------------------------------------------------
 
 # Vegetation Class QA/QC
