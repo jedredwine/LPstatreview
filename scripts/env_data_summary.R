@@ -205,29 +205,29 @@ plot.elev.rng <- ggplot(ele_test[!is.na(ele_test$ele_range),], aes(x='All Plots'
 ggsave("./figures/plot_elev_rng.jpg", plot = plot.elev.rng, width = 5, height = 5, dpi = 400, device = "jpeg")
 # = = = = = = = = = = = =
 # check derived elevation consistency across cycles 2 & 3
-ele_test_c23 <- env[env$Cycle == "C1" | env$Cycle == "C2",] %>%
+ele_test_c23 <- env[env$Cycle == "C2" | env$Cycle == "C3",] %>%
   group_by(PlotID_New) %>%
   summarise(ele_sd = sd(EDEN_based_elev_cm),
             ele_range = max(EDEN_based_elev_cm, na.rm = TRUE) - min(EDEN_based_elev_cm, na.rm = TRUE))
 # ----------------------
 # write summary to csv
-write.csv(ele_test_2,'./analysis/plot_elevation_consistency_C1&C2.csv')
+write.csv(ele_test_c23,'./analysis/plot_elevation_consistency_C2C3.csv')
 # ----------------------
 # plot standard deviations
-plot.elev.c1c2.sd <- ggplot(ele_test_c23[!is.na(ele_test_c23$ele_sd),], aes(x='',y=ele_sd)) +
+plot.elev.c2c3.sd <- ggplot(ele_test_c23[!is.na(ele_test_c23$ele_sd),], aes(x='',y=ele_sd)) +
   geom_boxplot() +
   labs(x='All Plots', y='Elevation SD (cm)') +
   theme_minimal()
 
-ggsave("./figures/plot_elev_C1C2_sd.jpg", plot = plot.elev.c1c2.sd, width = 5, height = 5, dpi = 400, device = "jpeg")
+ggsave("./figures/plot_elev_C2C3_sd.jpg", plot = plot.elev.c2c3.sd, width = 5, height = 5, dpi = 400, device = "jpeg")
 # ----------------------
 # plot range
-plot.elev.c1c2rng <- ggplot(ele_test_c23[!is.na(ele_test_c23$ele_range),], aes(x='All Plots',y=ele_range)) +
+plot.elev.c2c3.rng <- ggplot(ele_test_c23[!is.na(ele_test_c23$ele_range),], aes(x='All Plots',y=ele_range)) +
   geom_boxplot() +
   labs(x='', y='Elevation Range (cm)') +
   theme_minimal()
 
-ggsave("./figures/plot_elev_C1C2_rng.jpg", plot = plot.elev.c1c2.rng, width = 5, height = 5, dpi = 400, device = "jpeg")
+ggsave("./figures/plot_elev_C2C3_rng.jpg", plot = plot.elev.c2c3.rng, width = 5, height = 5, dpi = 400, device = "jpeg")
 # ------------------------------------------------------------------------------
 
 # Vegetation Class QA/QC
