@@ -83,8 +83,8 @@ psus_region <- ggplot() +
 psu_list <- psu_sp$PSU_N
 length(psu_list)
 
-# save plot
-ggsave("./figures/psus_x_region.jpg", plot = psus_region, width = 4, height = 6, dpi = 400, device = "jpeg")
+# # save plot
+# ggsave("./figures/psus_x_region.jpg", plot = psus_region, width = 4, height = 6, dpi = 400, device = "jpeg")
 # ==============================================================================
 # load ENV data (Jay Sah raw data table (2026-05-16) converted to .csv, column names fixed: no underscores at beginning, changed: WD_mean_cm, Class, EDEN_based_elev_cm CLAJAM_ht_cm)
 loc <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_locations.csv')
@@ -106,6 +106,7 @@ length(unique(env$PSUID))
 
 # PLOT LEVEL QA/QC
 
+{
 # check records with no location info
 table(env[is.na(env$X_NAD83),]$PSUID,env[is.na(env$X_NAD83),]$Cluster)  # PSU 17, Clusters 48,49,50 in Cycle 1, Year 2
 
@@ -120,8 +121,8 @@ coord_test <- env %>%
             North_mm = mean(Y_NAD83),
             North_sd = sd(Y_NAD83))
 
-# write summary to csv
-write.csv(coord_test,'./analysis/plot_coordinate_consistency.csv')
+# # write summary to csv
+# write.csv(coord_test,'./analysis/plot_coordinate_consistency.csv')
 # ----------------------
 # convert to longform for plotting
 coord_test_lf <- coord_test[,c('PlotID_New','East_sd','North_sd')] %>%
@@ -131,13 +132,13 @@ coord_test_lf <- coord_test[,c('PlotID_New','East_sd','North_sd')] %>%
       values_to = 'value'
     )
 
-# plot standard deviations
-plot.coord.sd <- ggplot(coord_test_lf[! is.na(coord_test_lf$value),], aes(x=variable,y=value)) +
-  geom_boxplot() +
-  labs(x='Coordinate', y='Coordiante SD (m)') +
-  theme_minimal()
-
-ggsave("./figures/plot_coord_sd.jpg", plot = plot.coord.sd, width = 10, height = 5, dpi = 400, device = "jpeg")
+# # plot standard deviations
+# plot.coord.sd <- ggplot(coord_test_lf[! is.na(coord_test_lf$value),], aes(x=variable,y=value)) +
+#   geom_boxplot() +
+#   labs(x='Coordinate', y='Coordiante SD (m)') +
+#   theme_minimal()
+# 
+# ggsave("./figures/plot_coord_sd.jpg", plot = plot.coord.sd, width = 10, height = 5, dpi = 400, device = "jpeg")
 # ----------------------
 # summarize spatial consistency of plots within PSUs
 plot_psu_sp <- st_join(plot_sp,psu_sp,left=TRUE)
@@ -148,8 +149,8 @@ summary_plot_counts_PSU <- plot_psu_sp %>%
   summarise(point_count = n())
 print(summary_plot_counts_PSU, n=100)
 
-# write summary to csv
-write.csv(as.data.frame(summary_plot_counts_PSU)[,c("PSU_ID","point_count")],'./analysis/plot_psu_count.csv')
+# # write summary to csv
+# write.csv(as.data.frame(summary_plot_counts_PSU)[,c("PSU_ID","point_count")],'./analysis/plot_psu_count.csv')
 
 # identify plot outside of PSUs & write to file
 non_intersecting_pts <- plot_psu_sp %>% filter(is.na(PSU_ID))
@@ -164,21 +165,23 @@ write.csv(as.data.frame(table(non_intersecting_pts$PSUID)),'./analysis/plot_no_p
 # identify plots in wrong PSUs & write to file
 intersecting_pts <- plot_psu_sp %>% filter(!is.na(PSU_ID))
 
-plot_psu_sp_noPSU <- intersecting_pts[intersecting_pts$PSUID != intersecting_pts$PSU_ID,]
+plot_psu_sp_wrongPSU <- intersecting_pts[intersecting_pts$PSUID != intersecting_pts$PSU_ID,]
 
 # write summary to csv
-write.csv(as.data.frame(non_intersecting_pts)[,c("C123Merged_EnvSNO","C123_Plot_SNO","PlotID_New","PSUID","Cycle.x","Cycle_Year")],'./analysis/plot_no_psu.csv')
-
+write.csv(as.data.frame(plot_psu_sp_wrongPSU)[,c("C123Merged_EnvSNO","C123_Plot_SNO","PlotID_New","PSU.x","PSU.y","Cycle.x","Cycle_Year")],'./analysis/plot_wrong_psu.csv')
+}
 # ------------------------------------------------------------------------------
 
 # Water Depth QA/QC
-
+{
 # identify WD standard deviations of greater 30 cm
 env$WD_SD <- apply(env[, c("WD_1_cm","WD_2_cm","WD_3_cm")], 1, function(x) sd(x, na.rm=TRUE))
 env[!is.na(env$WD_SD) & env$WD_SD > 30,]  # 5 records
+}
 # ------------------------------------------------------------------------------
-# Elevation QA/QC
 
+# Elevation QA/QC
+{
 # check derived elevation consistency across time
 ele_test <- env %>%
   group_by(PlotID_New) %>%
@@ -204,6 +207,7 @@ plot.elev.rng <- ggplot(ele_test[!is.na(ele_test$ele_range),], aes(x='All Plots'
 
 ggsave("./figures/plot_elev_rng.jpg", plot = plot.elev.rng, width = 5, height = 5, dpi = 400, device = "jpeg")
 # = = = = = = = = = = = =
+
 # check derived elevation consistency across cycles 2 & 3
 ele_test_c23 <- env[env$Cycle == "C2" | env$Cycle == "C3",] %>%
   group_by(PlotID_New) %>%
@@ -228,6 +232,7 @@ plot.elev.c2c3.rng <- ggplot(ele_test_c23[!is.na(ele_test_c23$ele_range),], aes(
   theme_minimal()
 
 ggsave("./figures/plot_elev_C2C3_rng.jpg", plot = plot.elev.c2c3.rng, width = 5, height = 5, dpi = 400, device = "jpeg")
+}
 # ------------------------------------------------------------------------------
 
 # Vegetation Class QA/QC
