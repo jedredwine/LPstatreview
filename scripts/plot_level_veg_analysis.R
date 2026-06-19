@@ -14,14 +14,6 @@ library(ggplot2)
 # - no 0 cover for absence
 # - plot naming between cycles not consistent (i.e., 1,2,3 in C1 vs. C,E,N in C2 and C3 --> is 1=C, 2= E|N, 3 = E|N consistently?)
 
-
-
-
-
-
-
-
-
 #-------------------------------------------------------------------------------
 # load PSU shapefile with final approved LS analysis PSUs
 psu_sp <- st_read('./data/PSU_RS_LS.shp')
@@ -81,17 +73,7 @@ veg_cover_subplot <- veg_anl %>%
             cover_sd = sd(Cover)
             
   )
-veg$PlotID
 
-
-
-# convert to LF
-psu.rgn.cyc_lf <- psu[,c('PSU_ID','Region','C1','C2','C3')] %>%
-  pivot_longer(
-    cols = c(C1,C2,C3),
-    names_to = 'Cycle_Name',
-    values_to = 'Cycle'
-  )
 
 
 
