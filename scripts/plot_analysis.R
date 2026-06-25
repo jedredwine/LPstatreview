@@ -8,22 +8,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 #-------------------------------------------------------------------------------
-# # load PSU data (Bogen modified)
-# psu <- read.csv('./data/processed/psus.csv')
-# psu.rgn.cyc <- psu %>% mutate(across(c('Cy1_WYr','Cy2_WYr','Cy3_WYr',), as.integer))
-# head(psu)
-# nrow(psu)
-# 
-# # convert to long form
-# # table PSUs by Year and Region
-# psu.rgn.cyc_lf <- psu.rgn.cyc[,c('PSU_ID','Region','Cy1_WYr','Cy2_WYr','Cy3_WYr')] %>%
-#   pivot_longer(
-#     cols = c(Cy1_WYr,Cy2_WYr,Cy3_WYr),
-#     names_to = 'Cycle',
-#     values_to = 'value'
-#   )
-#-------------------------------------------------------------------------------
-# load PSU data (Jay Sah raw data table converted to .csv modified column names)
+
 psu <- read.csv('./data/processed/LP_R&S_C123_Yr1-5_PSU_Sampled.csv')
 head(psu)
 nrow(psu)
