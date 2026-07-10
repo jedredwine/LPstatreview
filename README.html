@@ -364,19 +364,33 @@ Panel Statistical Review of the Restoration, Coordination, Verification
 </div>
 <div id="repository-folder-structure" class="section level3">
 <h3>Repository Folder Structure</h3>
-<p>analysis: (1) QAQC: data QAQC output for data review and error checks
-(2) tests_models: statistical tests and models (not descriptive stats of
-raw data visualization)</p>
-<p>data: (1) raw_data: raw datasheets (2) processed: cleaned and
-filtered data (3) spatial: spatial vector and raster data</p>
+analysis:
+<p style="text-indent: 2em;">
+<ol style="list-style-type: decimal">
+<li>QAQC: data QAQC output for data review and error checks</li>
+<li>tests_models: statistical tests and models (not descriptive stats of
+raw data visualization)</li>
+</ol>
+data:
+<p style="text-indent: 2em;">
+<ol style="list-style-type: decimal">
+<li>raw_data: raw datasheets</li>
+<li>processed: cleaned and filtered data</li>
+<li>spatial: spatial vector and raster data</li>
+</ol>
 <p>docs: supporting documents of sampling designs, field protocols, QAQC
 protocol</p>
-<p>figures: data visualization and associated descriptive summary
+figures: data visualization and associated descriptive summary
 statistics root contains global summaries, sub folders contain
-individual units summaries (e.g., plot, psu, etc.) (1) at different
-focal scales (plot, cluster, psu, lsu) (2) variables of interest (SOI =
-species of interest, COM = community, HAB = habitat) (3) environmental
-variables (ELE = elevation, WD = water depth, HP = hydroperiod)</p>
+individual units summaries (e.g., plot, psu, etc.)
+<p style="text-indent: 2em;">
+<ol style="list-style-type: decimal">
+<li>at different focal scales (plot, cluster, psu, lsu)</li>
+<li>variables of interest (SOI = species of interest, COM = community,
+HAB = habitat)</li>
+<li>environmental variables (ELE = elevation, WD = water depth, HP =
+hydroperiod)</li>
+</ol>
 <p>scripts: scripts for QAQC, data visualization and statistical
 analysis env_data_summary.R - summary statistics of environmental data
 at various focal scales plot_level_veg_analysis.R - vegetation analysis
