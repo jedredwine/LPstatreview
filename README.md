@@ -33,4 +33,4 @@ scripts: scripts for QAQC, data visualization and statistical analysis
   plot_level_veg_analysis.R - vegetation analysis at the plot level
   plot_QAQC.R - sampling design consistency and summary stats at different focal scales
   
-_archive folders contain deprecated versions of scripts
+_archive folders contain deprecated versions of scripts and data files
