@@ -1,17 +1,17 @@
-# File name: sampling_summary.R
+# File name: plot_analysis.R
 # Author: Dan Gann
 # email: gannd@fiu.edu
 
+# Purpose: summarize sampling design components  
 # Required: PSU sampling info (LP_R&S_C123_Yr1-5_PSU_Sampled.csv)
 #-------------------------------------------------------------------------------
 library(tidyr)
 library(dplyr)
 library(ggplot2)
 #-------------------------------------------------------------------------------
-
+# load data
 psu <- read.csv('./data/processed/LP_R&S_C123_Yr1-5_PSU_Sampled.csv')
-head(psu)
-nrow(psu)
+head(psu);nrow(psu)
 #-------------------------------------------------------------------------------
 
 # Summarize PSU count by Region and Cycle

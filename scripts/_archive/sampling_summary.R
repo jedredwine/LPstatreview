@@ -2,6 +2,7 @@
 # Author: Dan Gann
 # email: gannd@fiu.edu
 
+# Purpose: summarize sampling design components 
 # Required: PSU sampling info (LP_R&S_C123_Yr1-5_PSU_Sampled.csv)
 #-------------------------------------------------------------------------------
 library(tidyr)

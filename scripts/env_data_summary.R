@@ -4,7 +4,9 @@
 # Author: Dan Gann
 # email: gannd@fiu.edu
 
-# Required: Environmental data (xxxx.csv)
+# Required: 
+#   (1) Environmental Data (C123_Yr1_5_ALL_Plots_envData.csv)
+#   (2) Plot Information (C123_Yr1_5_ALL_Plots_locations.csv')
 # ==============================================================================
 library(sf)
 library(tidyr)
@@ -68,13 +70,12 @@ library(ggplot2)
 
 # DATA issues encountered by D. Gann for cleaned data 2026-05-16 (J. Sah)
 
-{
 # Inconsistency of habitat names remains
 # non-random PSUs still present -- removed for analysis
 # 
 
 # load PSU shapefile with final approved LS analysis PSUs
-psu_sp <- st_read('./data/PSU_RS_LS.shp')
+psu_sp <- st_read('./data/spatial/PSU_RS_LS.shp')
 x11()
 psus_region <- ggplot() + 
   geom_sf(data = psu_sp, aes(fill = Region))
@@ -83,12 +84,12 @@ psus_region <- ggplot() +
 psu_list <- psu_sp$PSU_N
 length(psu_list)
 
-# # save plot
-# ggsave("./figures/psus_x_region.jpg", plot = psus_region, width = 4, height = 6, dpi = 400, device = "jpeg")
+# save plot
+ggsave("./figures/psus_x_region.jpg", plot = psus_region, width = 4, height = 6, dpi = 400, device = "jpeg")
 # ==============================================================================
 # load ENV data (Jay Sah raw data table (2026-05-16) converted to .csv, column names fixed: no underscores at beginning, changed: WD_mean_cm, Class, EDEN_based_elev_cm CLAJAM_ht_cm)
-loc <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_locations.csv')
-env <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_envData.csv')
+loc <- read.csv('./data/processed/C123_Yr1_5_ALL_Plots_locations.csv')
+env <- read.csv('./data/processed/C123_Yr1_5_ALL_Plots_envData.csv')
 head(env)
 nrow(env)
 
@@ -121,8 +122,8 @@ coord_test <- env %>%
             North_mm = mean(Y_NAD83),
             North_sd = sd(Y_NAD83))
 
-# # write summary to csv
-# write.csv(coord_test,'./analysis/plot_coordinate_consistency.csv')
+# write summary to csv
+write.csv(coord_test,'./analysis/plot_coordinate_consistency.csv')
 # ----------------------
 # convert to longform for plotting
 coord_test_lf <- coord_test[,c('PlotID_New','East_sd','North_sd')] %>%
@@ -132,13 +133,13 @@ coord_test_lf <- coord_test[,c('PlotID_New','East_sd','North_sd')] %>%
       values_to = 'value'
     )
 
-# # plot standard deviations
-# plot.coord.sd <- ggplot(coord_test_lf[! is.na(coord_test_lf$value),], aes(x=variable,y=value)) +
-#   geom_boxplot() +
-#   labs(x='Coordinate', y='Coordiante SD (m)') +
-#   theme_minimal()
-# 
-# ggsave("./figures/plot_coord_sd.jpg", plot = plot.coord.sd, width = 10, height = 5, dpi = 400, device = "jpeg")
+# plot standard deviations
+plot.coord.sd <- ggplot(coord_test_lf[! is.na(coord_test_lf$value),], aes(x=variable,y=value)) +
+  geom_boxplot() +
+  labs(x='Coordinate', y='Coordiante SD (m)') +
+  theme_minimal()
+
+ggsave("./figures/plot_coord_sd.jpg", plot = plot.coord.sd, width = 10, height = 5, dpi = 400, device = "jpeg")
 # ----------------------
 # summarize spatial consistency of plots within PSUs
 plot_psu_sp <- st_join(plot_sp,psu_sp,left=TRUE)
@@ -149,8 +150,8 @@ summary_plot_counts_PSU <- plot_psu_sp %>%
   summarise(point_count = n())
 print(summary_plot_counts_PSU, n=100)
 
-# # write summary to csv
-# write.csv(as.data.frame(summary_plot_counts_PSU)[,c("PSU_ID","point_count")],'./analysis/plot_psu_count.csv')
+# write summary to csv
+write.csv(as.data.frame(summary_plot_counts_PSU)[,c("PSU_ID","point_count")],'./analysis/plot_psu_count.csv')
 
 # identify plot outside of PSUs & write to file
 non_intersecting_pts <- plot_psu_sp %>% filter(is.na(PSU_ID))
@@ -253,8 +254,6 @@ for (psu in unique(env$PSUID)){
     theme_minimal()
   
   ggsave(paste0('./figures/psus_ELE_x_HAB/',psu,'_ele_x_hab.jpg'), plot = psu.ELE.HAB, width = 10, height = 5, dpi = 400, device = "jpeg")
-}
-
 }
 
 

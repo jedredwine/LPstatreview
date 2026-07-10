@@ -16,7 +16,7 @@ library(Rmisc)
 # ==============================================================================
 
 # load PSU shapefile with final approved LS analysis PSUs
-psu_sp <- sf::st_read('./data/PSU_RS_LS.shp')
+psu_sp <- sf::st_read('./data/spatial/PSU_RS_LS.shp')
 x11()
 psus_region <- ggplot() + 
   geom_sf(data = psu_sp, aes(fill = Region))
