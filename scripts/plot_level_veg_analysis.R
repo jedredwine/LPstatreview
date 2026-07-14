@@ -75,10 +75,9 @@ head(veg)
 # ------------------------------------------------------------------------------
 
 # load plot classification data
-plot_cls <- sf::st_read('//ditnocfs01.ad.fiu.edu/gannfs01/ACOE_RS/_data/C123_Yr1_5_ALLPlots_class_Johan.shp')
+plot_cls <- sf::st_read('./spatial/C123_Yr1_5_ALLPlots_class.shp')
 #x11();plot(plot_cls)
 table(plot_cls$PSU,plot_cls$habitat)
-
 
 plot_cls_hab <- as.data.frame(plot_cls[plot_cls$hab_25 != '',])
 head(plot_cls_hab)
@@ -88,7 +87,7 @@ head(plot_cls_hab)
 
 #-------------------------------------------------------------------------------
 
-# Summarize plot level species change by Plot Habitat Type by PSU  by Region
+# Summarize plot level species change by Plot, Habitat Type, PSU  and Region
 #     -- loop over all species of interest
 
 # set region of interest
