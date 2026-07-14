@@ -13,6 +13,7 @@ library(dplyr)
 library(ggplot2)
 library(rstatix)
 library(Rmisc)
+library(spdep)
 # ==============================================================================
 
 # load PSU shapefile with final approved LS analysis PSUs
@@ -79,7 +80,7 @@ plot_cls <- sf::st_read('//ditnocfs01.ad.fiu.edu/gannfs01/ACOE_RS/_data/C123_Yr1
 table(plot_cls$PSU,plot_cls$habitat)
 
 
-plot_cls_hab <- as.data.frame(plot_cls[plot_cls$habitat != '',])
+plot_cls_hab <- as.data.frame(plot_cls[plot_cls$hab_25 != '',])
 head(plot_cls_hab)
 # ------------------------------------------------------------------------------
 
@@ -108,10 +109,9 @@ plot_list_cycle$PlotID <- substr(plot_list_cycle$PlotID_Cycle,1,8)
 
 # species of interest list (no more than 9)
 soi_list <- c('CLAJAM','TYPDOM','ELECEL','NYMODO','NYMAQU','UTRPUR')
-
 # ------------------------------------------------------------------------------
 # generate plot_cycle_soi table
-cycle_list <- c('C1','C2','C3')
+cy_list <- c('C1','C2','C3')
 
 # Generate combinations
 combos <- expand.grid(list(plot_list_cycle[,1],soi_list),stringsAsFactors = FALSE)
@@ -122,7 +122,7 @@ plot_cycle_sp_list$PlotID <- substring(plot_cycle_sp_list$plot_cycle_sp,1,8)
 head(plot_cycle_sp_list)
 
 # merge habitat data to plot vegetation data 
-plot_cycle_sp_list <- merge(plot_cycle_sp_list,plot_cls_hab[c('PlotID_New','habitat')], by.x='PlotID', by.y='PlotID_New')
+plot_cycle_sp_list <- merge(plot_cycle_sp_list,plot_cls_hab[c('PlotID_New','hab_25','C3_X_NAD83','C3_Y_NAD83')], by.x='PlotID', by.y='PlotID_New')
 head(plot_cycle_sp_list)
 # ------------------------------------------------------------------------------
 # ...
@@ -141,6 +141,33 @@ veg_anl$Cycle <- substring(veg_anl$plot_cycle_sp,10,11)
 # # stats summary collector
 # stats.df <- data.frame(PSU = character(), SPCODE=character(), n = integer(),stat = numeric(),df=integer(),p=numeric())
 
+# ------------------------------------------------------------------------------
+# test for spatial autocorrelation to test assumption that samples could have been drawn with simple random procedure
+soi <- "CLAJAM"
+
+for (PSU in psu_cur){
+  veg_anl_PSU <- veg_anl[veg_anl$PSUID == PSU,]
+  head(veg_anl_PSU)
+  
+  # test for spatial autocorrelation to test assumption that samples could have been drawn with simple random procedure
+  for (cy in cy_list){
+    
+    soi_PSU_cy <- veg_anl_PSU[veg_anl_PSU$SPCODE == soi & veg_anl_PSU$Cycle == cy,]
+    if(nrow(soi_PSU_cy) > 5){
+      
+      mdl_0 <- lm(Cover ~ 1, data = soi_PSU_cy)
+      
+      # spatial weights matrix
+      suppressWarnings({nb_points <- knn2nb(knearneigh(soi_PSU_cy[, c("C3_X_NAD83", "C3_Y_NAD83")], k = 7))})
+      listw_points <- nb2listw(nb_points, style = "W")
+      
+      # test spatial autocorrelation in residuals Null: no spatial autocorrelation
+      test_stat <- lm.morantest(mdl_0, listw_points)
+      print(paste0("FOr ",soi," in ",PSU," and Cycle",cy,", p-value for M-I is:",test_stat$p.value))
+    }
+  }
+}
+# ------------------------------------------------------------------------------
 # for PSU of interest and species of interest (SOI) plot habitat specific species abundance trends
 for (PSU in psu_cur){
   veg_anl_PSU <- veg_anl[veg_anl$PSUID == PSU,]
@@ -166,7 +193,7 @@ for (PSU in psu_cur){
   
   # write summary stats to file
   write.csv(stats,paste0('./figures/SOI_trend_by_PSU/',PSU,'_SOI_trend_stats.csv'))
-  
+
   # # for species of interest (SOI) test for significance of change
   # for (soi in soi_list){
   #   
@@ -187,10 +214,9 @@ for (PSU in psu_cur){
 }
 # # write stats summary table to file
 # write.csv(stats.df,paste0('./figures/SOI_trend_by_PSU/SOI_trend_PlotID_mdl',rgn,'.csv'))
-# ==============================================================================
 
 
-
+## EOF
 
 
 
