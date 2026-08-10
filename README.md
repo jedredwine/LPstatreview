@@ -5,7 +5,7 @@ This is the work environment for the Ridge & Slough Landscape Panel Statistical
 Review of the Restoration, Coordination, Verification (RECOVER) for the 
 Comprehensive Everglades Restoration Plan (CERP).<br>
 
-The purpose of the review is to .....<br>
+The purpose of the review is to ensure that the sampling design is likely to detect that the effects of restoration of flows to the Everglades results in appropriate shifts in plant species composition and recovery of the ridge slough and tree island landscape. <br>
 
 The repository is organized with the following folders structure:<br>
 
