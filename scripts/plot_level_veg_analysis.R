@@ -75,9 +75,9 @@ head(veg)
 # ------------------------------------------------------------------------------
 
 # load plot classification data
-plot_cls <- sf::st_read('./spatial/C123_Yr1_5_ALLPlots_class.shp')
+plot_cls <- sf::st_read('./data/spatial/C123_Yr1_5_ALLPlots_class.shp')
 #x11();plot(plot_cls)
-table(plot_cls$PSU,plot_cls$habitat)
+table(plot_cls$PSU,plot_cls$hab_09)
 
 plot_cls_hab <- as.data.frame(plot_cls[plot_cls$hab_25 != '',])
 head(plot_cls_hab)
