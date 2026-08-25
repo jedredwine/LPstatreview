@@ -53,3 +53,24 @@ summary(locs_final$hab_09)
 #write output to a file (this is the version of Johans file that is restricted
 #to sampled PSUs.  Additional filtering likely necessary prior to analysis)
 write_csv(locs_final, "./data/processed/C123_Yr1_5_ALL Plots_locations_habs_smpl.csv")
+
+#add 2009 Habitat designation to envData_cln.csv
+env$hab_09 <- locs_final$C123_Plot_SNO== paste(env$PSU,env$PLOT)
+env$PSU_PLOT <- paste0(env$PSU,env$PLOT)
+
+# merge habitat data to plot vegetation data 
+env2 <- merge(env,locs_final[c('PlotID_New','hab_09')], by.x='PSU_PLOT', by.y='PlotID_New')
+head(env2)
+
+write_csv(env2, "./data/processed/envData_cln_2.csv")
+
+#revised veg analysis (code adapted from plot_level_veg_analysis.R) using new habitat classification data
+# load plot classification data
+plot_cls <- sf::st_read('./data/spatial/C123_Yr1_5_ALLPlots_class.shp')
+#x11();plot(plot_cls)
+table(plot_cls$PSU,plot_cls$hab_09)
+
+plot_cls_hab <- as.data.frame(plot_cls[plot_cls$hab_25 != '',])
+head(plot_cls_hab)
+
+
