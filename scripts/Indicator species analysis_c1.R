@@ -43,95 +43,68 @@ library(permute)
 
 base_dir <- "C:/Users/druge/Dropbox/PROJECTS/FIU/PSU Work 2026/GITHUB"
 
-species_file <- file.path(
-  base_dir,
-  "c1spp.cover.csv"
-)
+species_file <- file.path(base_dir,
+                          "c1spp.cover.csv")
 
-region_file <- file.path(
-  base_dir,
-  "LPstatreview/data/Raw Vegetation Data",
-  "1. PSU Sampled_C1, C2 & C3, Scheudled-C4.xlsx"
-)
+region_file <- file.path(base_dir,
+                         "LPstatreview/data/Raw Vegetation Data",
+                         "1. PSU Sampled_C1, C2 & C3, Scheudled-C4.xlsx")
 
-habitat_file <- file.path(
-  base_dir,
-  "LPstatreview/data/processed",
-  "C123_Yr1_5_ALL Plots_locations_habs.csv"
-)
+habitat_file <- file.path(base_dir,
+                          "LPstatreview/data/processed",
+                          "C123_Yr1_5_ALL Plots_locations_habs.csv")
 
-output_dir <- file.path(
-  base_dir,
-  "Results_Tables/C1"
-)
+output_dir <- file.path(base_dir,
+                        "Results_Tables/C1")
 
 # Create output folder if it does not already exist
-dir.create(
-  output_dir,
-  recursive = TRUE,
-  showWarnings = FALSE
-)
-
+dir.create(output_dir, recursive = TRUE,
+           showWarnings = FALSE)
 
 # ======================================================================
 # 4. LOAD CYCLE 1 SPECIES DATA
 # ======================================================================
 
-c1spp.cover <- read.csv(
-  species_file,
-  header = TRUE
-)
+c1spp.cover <- read.csv(species_file, header = TRUE)
 
 # Examine data
 str(c1spp.cover)
 head(c1spp.cover)
 
-
 # ======================================================================
 # 5. CREATE SPECIES-BY-PLOT MATRIX
 # ======================================================================
 
-c1.spp.matrix <- dcast(
-  c1spp.cover,
-  PSU + PlotID ~ Species,
-  value.var = "Cover",
-  fun.aggregate = sum
-)
+c1.spp.matrix <- dcast(c1spp.cover,
+                       PSU + PlotID ~ Species,
+                       value.var = "Cover",
+                       fun.aggregate = sum)
 
 # Check matrix
 dim(c1.spp.matrix)
 head(c1.spp.matrix)
-
 
 # ======================================================================
 # 6. CLEAN SPECIES NAMES
 # ======================================================================
 
 # Remove leading "X" added by R to some species names
-names(c1.spp.matrix) <- sub(
-  "^X",
-  "",
-  names(c1.spp.matrix)
-)
+names(c1.spp.matrix) <- sub("^X",
+                            "",
+                            names(c1.spp.matrix))
 
 
 # ======================================================================
 # 7. LOAD REGION INFORMATION
 # ======================================================================
 
-regions <- read_excel(
-  region_file,
-  sheet = "PSU_C1-4 Sampled, C4-Scheduled",
-  col_types = "text"
-)
+regions <- read_excel(region_file,
+                      sheet = "PSU_C1-4 Sampled, C4-Scheduled",
+                      col_types = "text")
 
 # Keep only PSU and Region
-regions <- regions %>%
-  select(
-    PSU = `PSU...1`,
-    Region
-  ) %>%
-  distinct()
+regions <- regions %>% select(PSU = `PSU...1`,
+                              Region) %>% distinct()
 
 # Examine region information
 table(regions$Region, useNA = "ifany")

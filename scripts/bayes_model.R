@@ -156,7 +156,7 @@ cy_list <- c('C1','C2','C3')
 
 
 #merge location coordinates to all veg plot observations
-veg_locs <- merge(veg,plot_cls[c('PlotID_New','hab_09','C3_X_NAD83','C3_Y_NAD83')], by.x='PlotID', by.y='PlotID_New')
+veg_locs <- merge(veg,plot_cls[c('PlotID_New','hab_09','hab_25', 'C3_X_NAD83','C3_Y_NAD83')], by.x='PlotID', by.y='PlotID_New')
 #add region designation to veg locs
 veg_locs_reg <- merge(veg_locs, psu[c('PSU_ID', 'Region')], by.x='PSUID', by.y='PSU_ID')
 
@@ -166,16 +166,19 @@ soi <- "CLAJAM"
 cy <- "C1"
 
 soi_PSU_cy <- veg_locs_reg[veg_locs_reg$SPCODE == soi & veg_locs_reg$Cycle == cy,]
-soi_PSU_cy1 <- soi_PSU_cy[c(7,12,13)] 
+soi_PSU_cy1 <- soi_PSU_cy[c(1,7,11,12,13,14,16)] 
 coordinates(soi_PSU_cy1) <- ~C3_X_NAD83+C3_Y_NAD83
+
+#Use 2/3 of max length of data, should I make variograms one PSU at a time?
 
 if(nrow(soi_PSU_cy) > 5){
   
   
-  emp_var <- variogram(Cover~1, soi_PSU_cy1, cutoff = 1000, width = 5)
-  model.1 <- fit.variogram(emp_var,vgm(1000,"Gau",300,2.5))
+  emp_var <- variogram(Cover~1 + hab_25 + PSUID + Region, soi_PSU_cy1, cutoff = 5000, width = 5)
+  model.1 <- fit.variogram(emp_var,vgm(5000,"Gau",300,2.5)) #No convergence after 200 iterations: try different initial values?
   plot(emp_var, model=model.1)
   exp_variogram_data <- data.frame(distance = emp_var$dist, gamma = emp_var$gamma)
+  
   ggplot(exp_variogram_data, aes(x = distance, y = gamma)) +
     geom_point() +
     geom_line() +
