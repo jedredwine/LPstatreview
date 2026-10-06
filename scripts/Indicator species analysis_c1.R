@@ -89,10 +89,7 @@ head(c1.spp.matrix)
 # ======================================================================
 
 # Remove leading "X" added by R to some species names
-names(c1.spp.matrix) <- sub("^X",
-                            "",
-                            names(c1.spp.matrix))
-
+names(c1.spp.matrix) <- sub("^X", "", names(c1.spp.matrix))
 
 # ======================================================================
 # 7. LOAD REGION INFORMATION
