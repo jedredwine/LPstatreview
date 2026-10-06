@@ -13,12 +13,13 @@
 #   Permutations = 9,999
 #   max.order = 1
 #
+
+# Analyst: Deus Rugemalila
 # ======================================================================
 
 # ======================================================================
 # 1. CLEAN ENVIRONMENT
 # ======================================================================
-
 rm(list = ls())
 
 # Reproducible permutation results
@@ -41,371 +42,290 @@ library(permute)
 # 3. DEFINE FILE PATHS
 # ======================================================================
 
-base_dir <- "C:/Users/druge/Dropbox/PROJECTS/FIU/PSU Work 2026/GITHUB"
+base_dir <- "C:/Users/druge/Dropbox/PROJECTS/GitHub/FIU/LPstatreview"
 
-species_file <- file.path(base_dir,
-                          "c1spp.cover.csv")
+species_file <- file.path("C:/Users/druge/Dropbox/PROJECTS/GitHub/FIU/LPstatreview/data/processed")
 
 region_file <- file.path(base_dir,
-                         "LPstatreview/data/Raw Vegetation Data",
+                         "data/raw_data/",
                          "1. PSU Sampled_C1, C2 & C3, Scheudled-C4.xlsx")
 
 habitat_file <- file.path(base_dir,
-                          "LPstatreview/data/processed",
+                          "data/processed",
                           "C123_Yr1_5_ALL Plots_locations_habs.csv")
 
 output_dir <- file.path(base_dir,
-                        "Results_Tables/C1")
+                        "analysis/Indicator_Species_Analysis")
 
 # Create output folder if it does not already exist
-dir.create(output_dir, recursive = TRUE,
-           showWarnings = FALSE)
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-# ======================================================================
-# 4. LOAD CYCLE 1 SPECIES DATA
-# ======================================================================
+# ================================================================
+# 3. LOAD SPECIES COVER DATA
+# ================================================================
 
-c1spp.cover <- read.csv(species_file, header = TRUE)
+c1_cover <- read.csv("C:/Users/druge/Dropbox/PROJECTS/GitHub/FIU/LPstatreview/data/processed/C123_Yr1_5_ALL_SppCover_Final.csv", header = TRUE)
 
-# Examine data
-str(c1spp.cover)
-head(c1spp.cover)
+# Keep c1 species
+c1_cover <- subset(c1_cover, Cycle == "C1")
+c1_cover <- subset(c1_cover, select = c("PlotID", "SPCODE", "Cover"))
 
-# ======================================================================
-# 5. CREATE SPECIES-BY-PLOT MATRIX
-# ======================================================================
 
-c1.spp.matrix <- dcast(c1spp.cover,
-                       PSU + PlotID ~ Species,
-                       value.var = "Cover",
-                       fun.aggregate = sum)
+### Get PSU from another file
+PSUs <- read.csv("C:/Users/druge/Dropbox/PROJECTS/GitHub/FIU/LPstatreview/data/processed/C123_Yr1_5_ALL Plots_envData.csv", header = TRUE)
 
-# Check matrix
-dim(c1.spp.matrix)
-head(c1.spp.matrix)
+PSUs <- subset(PSUs, select = c("PlotID_New", "PSU"))
 
-# ======================================================================
-# 6. CLEAN SPECIES NAMES
-# ======================================================================
+c1_cover <- merge(PSUs, c1_cover, 
+                  by.x = "PlotID_New",
+                  by.y = "PlotID")
 
-# Remove leading "X" added by R to some species names
-names(c1.spp.matrix) <- sub("^X", "", names(c1.spp.matrix))
+colnames(c1_cover) <- c("PlotID", "PSU", "Species", "Cover")
+str(c1_cover)
 
-# ======================================================================
-# 7. LOAD REGION INFORMATION
-# ======================================================================
+# ================================================================
+# 4. CREATE SPECIES-BY-PLOT MATRIX
+# ================================================================
 
-regions <- read_excel(region_file,
-                      sheet = "PSU_C1-4 Sampled, C4-Scheduled",
+c1_species_matrix <- dcast(c1_cover, PSU + PlotID ~ Species, value.var = "Cover",
+                           fun.aggregate = sum)
+
+# View column names
+colnames(c1_species_matrix)
+# 
+# # Remove X added by R to species names beginning with numbers
+# names(c1_species_matrix) <- sub(
+#   "^X",
+#   "",
+#   names(c1_species_matrix)
+# )
+
+
+# ================================================================
+# 5. LOAD REGION INFORMATION
+# ================================================================
+
+regions <- read_excel(region_file, sheet = "PSU_C1-4 Sampled, C4-Scheduled",
                       col_types = "text")
 
-# Keep only PSU and Region
-regions <- regions %>% select(PSU = `PSU...1`,
-                              Region) %>% distinct()
+regions <- regions %>% select(PSU = `PSU...1`, Region) %>% distinct()
 
-# Examine region information
-table(regions$Region, useNA = "ifany")
+# Make sure PSU has the same data type
+c1_species_matrix$PSU <- as.character(c1_species_matrix$PSU)
+regions$PSU <- as.character(regions$PSU)
 
+# ================================================================
+# 6. ADD REGION TO SPECIES MATRIX
+# ================================================================
 
-# ======================================================================
-# 8. ADD REGION TO SPECIES MATRIX
-# ======================================================================
+c1_species_matrix <- c1_species_matrix %>% left_join(regions, by = "PSU")
 
-c1.spp.matrix <- c1.spp.matrix %>%
-  left_join(
-    regions,
-    by = "PSU"
-  )
+# ================================================================
+# 7. LOAD HABITAT INFORMATION
+# ================================================================
 
-# Check results
-table(
-  c1.spp.matrix$Region,
-  useNA = "ifany"
-)
+habitat_raw <- read.csv(habitat_file, header = TRUE)
 
 
-# ======================================================================
-# 9. LOAD HABITAT INFORMATION
-# ======================================================================
+# ================================================================
+# 8. CREATE FINAL HABITAT VARIABLE
+# ================================================================
 
-habitat <- read.csv(
-  habitat_file,
-  header = TRUE
-)
+habitat <- habitat_raw %>% transmute(PlotID = PlotID_New, PSU = as.character(PSU),
+                                     habitat = if_else(
+                                       is.na(hab_09) | trimws(hab_09) == "",
+                                       hab_25,
+                                       hab_09)) %>% distinct()
 
+# ================================================================
+# 9. MERGE SPECIES, REGION, AND HABITAT DATA
+# ================================================================
 
-# ======================================================================
-# 10. CREATE FINAL HABITAT CLASSIFICATION
-# ======================================================================
+analysis_data <- habitat %>% inner_join(c1_species_matrix,
+                                        by = c("PlotID", "PSU"))
 
-habitat3 <- habitat %>%
-  transmute(
-    
-    PlotID = PlotID_New,
-    
-    PSU = PSU,
-    
-    # Use hab_09 when available.
-    # Otherwise use hab_25.
-    habitat = if_else(
-      is.na(hab_09) | trimws(hab_09) == "",
-      hab_25,
-      hab_09
-    )
-    
-  ) %>%
-  distinct()
+# ================================================================
+# 10. REMOVE RECORDS MISSING ESSENTIAL METADATA
+# ================================================================
+analysis_data <- analysis_data %>% filter(!is.na(PlotID),
+                                          !is.na(PSU),
+                                          !is.na(habitat),
+                                          habitat != "",
+                                          !is.na(Region),
+                                          Region != "")
+# ================================================================
+# 11. CREATE UNIQUE ROW IDENTIFIER
+# ================================================================
+#
+# Using PSU + PlotID is safer than PlotID alone
 
+analysis_data$RowID <- paste(analysis_data$PSU, analysis_data$PlotID, sep = "_")
 
-# Examine habitat classifications
-table(
-  habitat3$habitat,
-  useNA = "ifany"
-)
+# Check that the identifier (RowID) is unique
+if (anyDuplicated(analysis_data$RowID) > 0) {
+  stop("PSU + PlotID does not uniquely identify every row. ",
+       "Check for duplicated plots after merging.")}
 
-
-# ======================================================================
-# 11. MERGE SPECIES, REGION, AND HABITAT DATA
-# ======================================================================
-
-matrix2 <- habitat3 %>%
-  inner_join(
-    c1.spp.matrix,
-    by = c("PlotID", "PSU")
-  )
+rownames(analysis_data) <- analysis_data$RowID
 
 
-# ======================================================================
-# 12. REMOVE INCOMPLETE METADATA
-# ======================================================================
+# ================================================================
+# 12. SEPARATE METADATA AND SPECIES DATA
+# ================================================================
+Plotdata <- analysis_data %>% select(RowID, PlotID, PSU, habitat, Region)
 
-# Indicator species analysis requires PSU, habitat, and Region
-matrix2 <- matrix2 %>%
-  filter(
-    !is.na(PlotID),
-    !is.na(PSU),
-    !is.na(habitat),
-    !is.na(Region),
-    trimws(habitat) != ""
-  )
+rownames(Plotdata) <- Plotdata$RowID
 
 
-# ======================================================================
-# 13. SET PLOT ID AS ROW NAMES
-# ======================================================================
+# Select species columns by excluding metadata/Plotdata
+c1spp <- analysis_data %>% select(-RowID, -PlotID, -PSU, -habitat, -Region)
 
-rownames(matrix2) <- matrix2$PlotID
-
-
-# ======================================================================
-# 14. SEPARATE METADATA AND SPECIES DATA
-# ======================================================================
-
-Plotdata <- matrix2 %>%
-  select(
-    PlotID,
-    PSU,
-    habitat,
-    Region
-  )
-
-c1spp <- matrix2 %>%
-  select(
-    -PlotID,
-    -PSU,
-    -habitat,
-    -Region
-  )
+# ================================================================
+# 13. ENSURE SPECIES COLUMNS ARE NUMERIC
+# ================================================================
+c1spp[] <- lapply(c1spp, as.numeric)
 
 
-# ======================================================================
-# 15. MAKE SURE SPECIES COLUMNS ARE NUMERIC
-# ======================================================================
+# ================================================================
+# 14. HANDLE MISSING SPECIES VALUES
+# ================================================================
+#
+# This assumes NA in a species cell means the species was not
+# recorded in that plot and should therefore be treated as zero.
 
-c1spp[] <- lapply(
-  c1spp,
-  as.numeric
-)
-
-
-# ======================================================================
-# 16. REPLACE SPECIES NAs WITH ZERO
-# ======================================================================
-
-# Missing species cover is treated as absence
 c1spp[is.na(c1spp)] <- 0
 
+# ================================================================
+# 15. REMOVE SPECIES ABSENT FROM THE ENTIRE DATASET
+# ================================================================
 
-# ======================================================================
-# 17. REMOVE SPECIES ABSENT FROM ALL PLOTS
-# ======================================================================
+keep_species <- colSums(c1spp, na.rm = TRUE) > 0
+c1spp <- c1spp[,keep_species, drop = FALSE]
 
-keep_species <- colSums(
-  c1spp,
-  na.rm = TRUE
-) > 0
+# ================================================================
+# 16. REMOVE PLOTS WITH NO SPECIES COVER
+# ================================================================
+keep_plots <- rowSums(c1spp, na.rm = TRUE) > 0
+c1spp <- c1spp[keep_plots, ,drop = FALSE]
 
-c1spp <- c1spp[
-  ,
-  keep_species,
-  drop = FALSE
-]
+Plotdata <- Plotdata[keep_plots, ,drop = FALSE]
 
+# ================================================================
+# 17. CHECK ALIGNMENT. If not aligned, an error msg will pop-up
+# ================================================================
 
-# ======================================================================
-# 18. REMOVE PLOTS WITH NO SPECIES
-# ======================================================================
-
-keep_plots <- rowSums(
-  c1spp,
-  na.rm = TRUE
-) > 0
-
-c1spp <- c1spp[
-  keep_plots,
-  ,
-  drop = FALSE
-]
-
-Plotdata <- Plotdata[
-  keep_plots,
-  ,
-  drop = FALSE
-]
+if (!identical(rownames(c1spp), rownames(Plotdata))) {
+  stop("Species matrix and metadata are not aligned.")
+}
 
 
-# ======================================================================
-# 19. VERIFY ALIGNMENT
-# ======================================================================
+# ================================================================
+# 18. HELLINGER TRANSFORMATION
+# ================================================================
+# NOTE: decostand(..., method = "hellinger") already performs the
+# square-root component of the Hellinger transformation. 
 
-stopifnot(
-  nrow(c1spp) == nrow(Plotdata)
-)
+c1spp_hell <- decostand(c1spp, method = "hellinger")
 
-stopifnot(
-  identical(
-    rownames(c1spp),
-    rownames(Plotdata)
-  )
-)
+# ================================================================
+# 19. INDICATOR SPECIES FUNCTION
+# ================================================================
+#
+# This function:
+#   - subsets one Region or PSU
+#   - counts plots and habitats
+#   - removes empty plots
+#   - removes species absent from the group
+#   - checks whether multipatt() can run
+#   - runs IndVal.g
+#   - extracts significant species
+#   - records diagnostics
 
+# ================================================================
 
-# ======================================================================
-# 20. DATA SUMMARY BEFORE TRANSFORMATION
-# ======================================================================
+run_indval <- function(group_value, group_variable, metadata, spp, alpha = 0.05,
+                       nperm = 9999) {
 
-cat("\n")
-cat("====================================================\n")
-cat("CYCLE 1 DATA SUMMARY\n")
-cat("====================================================\n")
-
-cat(
-  "Number of plots:",
-  nrow(c1spp),
-  "\n"
-)
-
-cat(
-  "Number of species:",
-  ncol(c1spp),
-  "\n"
-)
-
-cat(
-  "Number of PSUs:",
-  length(unique(Plotdata$PSU)),
-  "\n"
-)
-
-cat(
-  "Number of Regions:",
-  length(unique(Plotdata$Region)),
-  "\n"
-)
-
-cat(
-  "Number of habitats:",
-  length(unique(Plotdata$habitat)),
-  "\n"
-)
-
-
-# ======================================================================
-# 21. HELLINGER TRANSFORMATION
-# ======================================================================
-
-# Hellinger transformation already includes the square-root operation.
-# Therefore, DO NOT apply sqrt() again afterward.
-
-c1spp <- decostand(
-  c1spp,
-  method = "hellinger"
-)
-
-
-# ======================================================================
-# 22. GENERAL INDICATOR SPECIES FUNCTION
-# ======================================================================
-
-run_indval <- function(
-    group_value,
-    group_variable,
-    metadata,
-    spp,
-    output_dir,
-    cycle = "c1",
-    alpha = 0.05,
-    nperm = 9999) {
+  # --------------------------------------------------------------
+  # A. SELECT GROUP
+  # --------------------------------------------------------------
+  
+  keep <- (!is.na(metadata[[group_variable]]) & metadata[[group_variable]] == group_value)
+  meta_sub <- metadata[keep,,drop = FALSE]
+  
+  spp_sub <- spp[keep,,drop = FALSE]
   
   
-  # --------------------------------------------------------------------
-  # A. Identify plots belonging to this group
-  # --------------------------------------------------------------------
+  # --------------------------------------------------------------
+  # B. INITIAL DIAGNOSTIC COUNTS
+  # --------------------------------------------------------------
   
-  keep <- !is.na(metadata[[group_variable]]) &
-    metadata[[group_variable]] == group_value
+  n_plots_initial <- nrow(spp_sub)
+  n_habitats_initial <- length(unique(na.omit(meta_sub$habitat)))
+  n_species_initial <- if (nrow(spp_sub) > 0) {
+    sum(colSums(spp_sub, na.rm = TRUE) > 0)
+    } else {
+      0
+      }
+
+    # --------------------------------------------------------------
+  # C. DIAGNOSTIC HELPER
+  # --------------------------------------------------------------
   
-  
-  meta_sub <- metadata[
-    keep,
-    ,
-    drop = FALSE
-  ]
-  
-  spp_sub <- spp[
-    keep,
-    ,
-    drop = FALSE
-  ]
-  
-  
-  # --------------------------------------------------------------------
-  # B. Check number of plots
-  # --------------------------------------------------------------------
-  
-  if (nrow(spp_sub) < 2) {
+  make_diagnostic <- function(
+    status,
+    reason,
+    n_plots_final = NA_integer_,
+    n_habitats_final = NA_integer_,
+    n_species_final = NA_integer_,
+    n_significant = 0L) {
     
-    message(
-      "Skipping ",
-      group_variable,
-      " ",
-      group_value,
-      ": fewer than 2 plots."
+    data.frame(
+      Group_Type = group_variable,
+      Group = as.character(group_value),
+      Plots_Initial = as.integer(n_plots_initial), 
+      Plots_Analyzed = as.integer(n_plots_final),
+      Habitats_Initial =  as.integer(n_habitats_initial),
+      Habitats_Analyzed = as.integer(n_habitats_final),
+      Species_Initial = as.integer(n_species_initial),
+      Species_Analyzed = as.integer(n_species_final),
+      Significant_Indicators = as.integer(n_significant), 
+      Status = status, Reason = reason, stringsAsFactors = FALSE)
+    }
+  
+  
+  # --------------------------------------------------------------
+  # D. CHECK INITIAL NUMBER OF PLOTS
+  # --------------------------------------------------------------
+    if (n_plots_initial < 2) {
+      diagnostic <- make_diagnostic(
+      status = "Skipped",
+      reason = "Fewer than 2 plots"
     )
     
-    return(NULL)
+    return(
+      list(
+        results = NULL,
+        diagnostic = diagnostic
+      )
+    )
   }
   
   
-  # --------------------------------------------------------------------
-  # C. Remove plots containing no species
-  # --------------------------------------------------------------------
+  # --------------------------------------------------------------
+  # E. REMOVE EMPTY PLOTS
+  # --------------------------------------------------------------
   
   keep_rows <- rowSums(
     spp_sub,
     na.rm = TRUE
   ) > 0
   
+  spp_sub <- spp_sub[
+    keep_rows,
+    ,
+    drop = FALSE
+  ]
   
   meta_sub <- meta_sub[
     keep_rows,
@@ -413,680 +333,440 @@ run_indval <- function(
     drop = FALSE
   ]
   
-  spp_sub <- spp_sub[
-    keep_rows,
-    ,
-    drop = FALSE
-  ]
   
+  # --------------------------------------------------------------
+  # F. REMOVE SPECIES ABSENT FROM THIS GROUP
+  # --------------------------------------------------------------
   
-  # Check again after removing empty plots
-  if (nrow(spp_sub) < 2) {
+  if (nrow(spp_sub) > 0) {
     
-    message(
-      "Skipping ",
-      group_variable,
-      " ",
-      group_value,
-      ": fewer than 2 non-empty plots."
-    )
+    keep_columns <- colSums(
+      spp_sub,
+      na.rm = TRUE
+    ) > 0
     
-    return(NULL)
+    spp_sub <- spp_sub[
+      ,
+      keep_columns,
+      drop = FALSE
+    ]
   }
   
   
-  # --------------------------------------------------------------------
-  # D. Remove species absent from this group
-  # --------------------------------------------------------------------
-  
-  keep_species <- colSums(
-    spp_sub,
-    na.rm = TRUE
-  ) > 0
-  
-  
-  spp_sub <- spp_sub[
-    ,
-    keep_species,
-    drop = FALSE
-  ]
+  # --------------------------------------------------------------
+  # G. FINAL COUNTS
+  # --------------------------------------------------------------
+  n_plots_final <- nrow(spp_sub)
+  n_species_final <- ncol(spp_sub)
+  meta_sub$habitat <- droplevels(factor(meta_sub$habitat))
+  n_habitats_final <- nlevels(meta_sub$habitat)
   
   
-  if (ncol(spp_sub) == 0) {
-    
-    message(
-      "Skipping ",
-      group_variable,
-      " ",
-      group_value,
-      ": no species present."
-    )
-    
-    return(NULL)
-  }
-  
-  
-  # --------------------------------------------------------------------
-  # E. Clean habitat groups
-  # --------------------------------------------------------------------
-  
-  meta_sub$habitat <- droplevels(
-    factor(meta_sub$habitat)
-  )
-  
-  
-  n_habitats <- nlevels(
-    meta_sub$habitat
-  )
-  
-  
-  # Indicator analysis requires at least two habitat groups
-  if (n_habitats < 2) {
-    
-    message(
-      "Skipping ",
-      group_variable,
-      " ",
-      group_value,
-      ": only one habitat represented."
-    )
-    
-    return(NULL)
-  }
-  
-  
-  # --------------------------------------------------------------------
-  # F. Check habitat replication
-  # --------------------------------------------------------------------
-  
-  habitat_counts <- table(
-    meta_sub$habitat
-  )
-  
-  
-  if (any(habitat_counts == 0)) {
-    
-    message(
-      "Skipping ",
-      group_variable,
-      " ",
-      group_value,
-      ": empty habitat level."
-    )
-    
-    return(NULL)
-  }
-  
-  
-  # --------------------------------------------------------------------
-  # G. Run indicator species analysis
-  # --------------------------------------------------------------------
-  
-  model <- tryCatch(
-    
-    {
-      
-      multipatt(
-        spp_sub,
-        meta_sub$habitat,
-        func = "IndVal.g",
-        control = how(
-          nperm = nperm
-        ),
-        max.order = 1
-      )
-      
-    },
-    
-    error = function(e) {
-      
-      message(
-        "Could not analyze ",
-        group_variable,
-        " ",
-        group_value,
-        ": ",
-        e$message
-      )
-      
-      return(NULL)
-      
+  # --------------------------------------------------------------
+  # H. CHECK NUMBER OF PLOTS
+  # --------------------------------------------------------------
+  if (n_plots_final < 2) {
+    diagnostic <- make_diagnostic(
+      status = "Skipped",
+      reason = "Fewer than 2 non-empty plots",
+      n_plots_final = n_plots_final,
+      n_habitats_final = n_habitats_final,
+      n_species_final = n_species_final)
+    return(list(results = NULL, diagnostic = diagnostic))
     }
-    
-  )
   
   
-  # If multipatt failed, stop processing this group
-  if (is.null(model)) {
-    
-    return(NULL)
-    
+  # --------------------------------------------------------------
+  # I. CHECK NUMBER OF SPECIES
+  # --------------------------------------------------------------
+  if (n_species_final == 0) {
+    diagnostic <- make_diagnostic(
+      status = "Skipped",
+      reason = "No species present",
+      n_plots_final = n_plots_final,
+      n_habitats_final = n_habitats_final,
+      n_species_final = n_species_final)
+    return(
+      list(
+        results = NULL,
+        diagnostic = diagnostic))
+    }
+  
+  # --------------------------------------------------------------
+  # J. CHECK NUMBER OF HABITATS
+  # --------------------------------------------------------------
+  if (n_habitats_final < 2) {
+    diagnostic <- make_diagnostic(
+      status = "Skipped",
+      reason = "Only one habitat represented",
+      n_plots_final = n_plots_final,
+      n_habitats_final = n_habitats_final,
+      n_species_final = n_species_final)
+    return(
+      list(
+        results = NULL,
+        diagnostic = diagnostic))
+    }
+  
+  # --------------------------------------------------------------
+  # K. RUN INDICATOR SPECIES ANALYSIS
+  # --------------------------------------------------------------
+  
+  model <- tryCatch(multipatt(spp_sub,
+                              meta_sub$habitat,
+                              func = "IndVal.g",
+                              control = how(nperm = nperm),
+                              max.order = 1),
+                    error = function(e) {
+                      attr(e, "error_message") <- conditionMessage(e)
+                      return(e)
+                      })
+  
+  # --------------------------------------------------------------
+  # L. HANDLE MULTIPATT ERROR
+  # --------------------------------------------------------------
+  if (inherits(model, "error")) {
+    diagnostic <- make_diagnostic(
+      status = "Error",
+      reason = paste(
+        "multipatt error:",
+        conditionMessage(model)),
+      n_plots_final = n_plots_final,
+      n_habitats_final = n_habitats_final,
+      n_species_final = n_species_final)
+    return(
+      list(
+        results = NULL,
+        diagnostic = diagnostic))
   }
   
   
-  # --------------------------------------------------------------------
-  # H. Check whether multipatt returned results
-  # --------------------------------------------------------------------
-  
-  if (
-    is.null(model$sign) ||
-    nrow(model$sign) == 0
-  ) {
-    
-    message(
-      group_variable,
-      " ",
-      group_value,
-      ": multipatt returned no species results."
+  # --------------------------------------------------------------
+  # M. CHECK WHETHER MODEL RETURNED RESULTS
+  # --------------------------------------------------------------
+  if (is.null(model$sign) ||
+      nrow(model$sign) == 0
+      ) {
+    diagnostic <- make_diagnostic(
+      status = "Completed",
+      reason = "multipatt returned no indicator results",
+      n_plots_final = n_plots_final,
+      n_habitats_final = n_habitats_final,
+      n_species_final = n_species_final,
+      n_significant = 0
     )
     
-    return(NULL)
+    return(
+      list(
+        results = NULL,
+        diagnostic = diagnostic
+      )
+    )
   }
   
   
-  # --------------------------------------------------------------------
-  # I. Convert results to dataframe
-  # --------------------------------------------------------------------
-  
+  # --------------------------------------------------------------
+  # N. EXTRACT ALL MODEL RESULTS
+  # --------------------------------------------------------------
   results <- data.frame(
-    
     Species = rownames(model$sign),
-    
     model$sign,
-    
     row.names = NULL,
+    check.names = FALSE)
+  
+  # --------------------------------------------------------------
+  # O. CHECK P-VALUE COLUMN
+  # --------------------------------------------------------------
+  if (!"p.value" %in% names(results)) {
     
-    check.names = FALSE
-  )
-  
-  
-  # --------------------------------------------------------------------
-  # J. FIX FOR PSU108 / ZERO-ROW RESULTS
-  # --------------------------------------------------------------------
-  
-  # This check prevents:
-  #
-  # Error in [[<-.data.frame:
-  # replacement has 1 row, data has 0
-  
-  if (nrow(results) == 0) {
-    
-    message(
-      group_variable,
-      " ",
-      group_value,
-      ": no indicator species results."
+    diagnostic <- make_diagnostic(
+      status = "Error",
+      reason = "p.value column not found in multipatt output",
+      n_plots_final = n_plots_final,
+      n_habitats_final = n_habitats_final,
+      n_species_final = n_species_final
     )
     
-    return(NULL)
+    return(
+      list(
+        results = NULL,
+        diagnostic = diagnostic
+      )
+    )
   }
   
   
-  # --------------------------------------------------------------------
-  # K. Keep statistically significant species
-  # --------------------------------------------------------------------
-  
+  # --------------------------------------------------------------
+  # P. KEEP SIGNIFICANT INDICATOR SPECIES
+  # --------------------------------------------------------------
   significant_results <- results %>%
     filter(
       !is.na(p.value),
       p.value <= alpha
     )
   
+  n_significant <- nrow(
+    significant_results
+  )
   
-  # --------------------------------------------------------------------
-  # L. Handle groups with no significant species
-  # --------------------------------------------------------------------
   
-  if (nrow(significant_results) == 0) {
+  # --------------------------------------------------------------
+  # Q. NO SIGNIFICANT INDICATORS
+  # --------------------------------------------------------------
+  #
+  # This specifically fixes:
+  #
+  # replacement has 1 row, data has 0
+  #
+  # because the group identifier is NOT assigned to a
+  # zero-row data frame.
+  
+  if (n_significant == 0) {
     
-    message(
-      group_variable,
-      " ",
-      group_value,
-      ": no significant indicator species at alpha = ",
-      alpha
+    diagnostic <- make_diagnostic(
+      status = "Completed",
+      reason = paste0(
+        "No significant indicators at alpha = ",
+        alpha
+      ),
+      n_plots_final = n_plots_final,
+      n_habitats_final = n_habitats_final,
+      n_species_final = n_species_final,
+      n_significant = 0
     )
     
-    return(NULL)
+    return(
+      list(
+        results = NULL,
+        diagnostic = diagnostic
+      )
+    )
   }
   
   
-  # --------------------------------------------------------------------
-  # M. Add group identifier
-  # --------------------------------------------------------------------
-  
-  # rep() explicitly guarantees the replacement has the same
-  # number of rows as the results dataframe.
-  
-  significant_results[[group_variable]] <- rep(
-    group_value,
-    nrow(significant_results)
-  )
-  
-  
-  # --------------------------------------------------------------------
-  # N. Reorder columns
-  # --------------------------------------------------------------------
-  
+  # --------------------------------------------------------------
+  # R. ADD GROUP INFORMATION
+  # --------------------------------------------------------------
   significant_results <- significant_results %>%
-    select(
-      Species,
-      all_of(group_variable),
-      everything()
+    mutate(
+      Group_Type = group_variable,
+      Group = as.character(group_value),
+      .before = 1
     )
   
   
-  # --------------------------------------------------------------------
-  # O. Create output filename
-  # --------------------------------------------------------------------
-  
-  filename <- paste0(
-    cycle,
-    "_",
-    group_value,
-    "_Indicator_Species_Results.csv"
+  # --------------------------------------------------------------
+  # S. DIAGNOSTIC FOR SUCCESSFUL ANALYSIS
+  # --------------------------------------------------------------
+  diagnostic <- make_diagnostic(
+    status = "Completed",
+    reason = "Significant indicator species detected",
+    n_plots_final = n_plots_final,
+    n_habitats_final = n_habitats_final,
+    n_species_final = n_species_final,
+    n_significant = n_significant
   )
   
   
-  # --------------------------------------------------------------------
-  # P. Save individual result
-  # --------------------------------------------------------------------
-  
-  write.csv(
-    significant_results,
-    file.path(
-      output_dir,
-      filename
-    ),
-    row.names = FALSE
-  )
-  
-  
-  # --------------------------------------------------------------------
-  # Q. Report progress
-  # --------------------------------------------------------------------
-  
-  message(
-    group_variable,
-    " ",
-    group_value,
-    ": ",
-    nrow(significant_results),
-    " significant indicator species."
-  )
-  
-  
-  # --------------------------------------------------------------------
-  # R. Return results
-  # --------------------------------------------------------------------
-  
+  # --------------------------------------------------------------
+  # T. RETURN BOTH RESULTS AND DIAGNOSTICS
+  # --------------------------------------------------------------
   return(
-    significant_results
+    list(
+      results = significant_results,
+      diagnostic = diagnostic
+    )
   )
 }
 
 
-# ======================================================================
-# 23. REGION-LEVEL INDICATOR SPECIES ANALYSIS
-# ======================================================================
-
-cat("\n")
-cat("====================================================\n")
-cat("REGION INDICATOR SPECIES ANALYSIS\n")
-cat("====================================================\n")
-
-
-regions_to_analyze <- sort(
-  unique(
-    na.omit(
-      Plotdata$Region
+# ================================================================
+# 20. FUNCTION TO RUN ALL GROUPS
+# ================================================================
+run_all_groups <- function(
+    group_variable,
+    metadata,
+    spp,
+    alpha = 0.05,
+    nperm = 9999) {
+  
+  
+  group_values <- sort(
+    unique(
+      na.omit(
+        metadata[[group_variable]]
+      )
     )
   )
-)
-
-
-cat(
-  "Regions to analyze:",
-  length(regions_to_analyze),
-  "\n\n"
-)
-
-
-region_results_list <- lapply(
   
-  regions_to_analyze,
   
-  function(x) {
-    
-    run_indval(
+  analyses <- lapply(
+    group_values,
+    function(x) {
       
-      group_value = x,
-      
-      group_variable = "Region",
-      
-      metadata = Plotdata,
-      
-      spp = c1spp,
-      
-      output_dir = output_dir,
-      
-      cycle = "c1",
-      
-      alpha = 0.05,
-      
-      nperm = 9999
+      run_indval(
+        group_value = x,
+        group_variable = group_variable,
+        metadata = metadata,
+        spp = spp,
+        alpha = alpha,
+        nperm = nperm
+      )
+    }
+  )
+  
+  
+  # Combine significant indicator results
+  results <- bind_rows(
+    lapply(
+      analyses,
+      function(x) x$results
     )
-    
+  )
+  
+  
+  # Combine diagnostics
+  diagnostics <- bind_rows(
+    lapply(
+      analyses,
+      function(x) x$diagnostic
+    )
+  )
+  
+  
+  return(
+    list(
+      results = results,
+      diagnostics = diagnostics
+    )
+  )
+}
+
+
+# ================================================================
+# 21. REGION-LEVEL ANALYSIS
+# ================================================================
+cat(
+  "\n========================================\n",
+  "RUNNING REGION-LEVEL ANALYSIS\n",
+  "========================================\n"
+)
+
+region_analysis <- run_all_groups(
+  group_variable = "Region",
+  metadata = Plotdata,
+  spp = c1spp_hell,
+  alpha = 0.05,
+  nperm = 9999
+)
+
+
+region_results <- region_analysis$results
+
+region_diagnostics <- region_analysis$diagnostics
+
+
+# ================================================================
+# 22. PSU-LEVEL ANALYSIS
+# ================================================================
+cat(
+  "\n========================================\n",
+  "RUNNING PSU-LEVEL ANALYSIS\n",
+  "========================================\n"
+)
+
+psu_analysis <- run_all_groups(
+  group_variable = "PSU",
+  metadata = Plotdata,
+  spp = c1spp_hell,
+  alpha = 0.05,
+  nperm = 9999
+)
+
+
+psu_results <- psu_analysis$results
+
+psu_diagnostics <- psu_analysis$diagnostics
+
+
+# ================================================================
+# 23. SORT COMBINED RESULTS
+# ================================================================
+if (nrow(region_results) > 0) {
+  region_results <- region_results %>% arrange(Group, p.value, desc(stat))
   }
-  
-)
-
-
-# ======================================================================
-# 24. COMBINE REGION RESULTS
-# ======================================================================
-
-region_results <- bind_rows(
-  region_results_list
-)
-
-
-# Save combined Region results
-write.csv(
-  
-  region_results,
-  
-  file.path(
-    output_dir,
-    "c1_All_Region_Indicator_Species_Results.csv"
-  ),
-  
-  row.names = FALSE
-)
-
-
-cat(
-  "\nTotal significant Region associations:",
-  nrow(region_results),
-  "\n"
-)
-
-
-# ======================================================================
-# 25. PSU-LEVEL INDICATOR SPECIES ANALYSIS
-# ======================================================================
-
-cat("\n")
-cat("====================================================\n")
-cat("PSU INDICATOR SPECIES ANALYSIS\n")
-cat("====================================================\n")
-
-
-psus_to_analyze <- sort(
-  unique(
-    na.omit(
-      Plotdata$PSU
-    )
-  )
-)
-
-
-cat(
-  "PSUs to analyze:",
-  length(psus_to_analyze),
-  "\n\n"
-)
-
-
-psu_results_list <- lapply(
-  
-  psus_to_analyze,
-  
-  function(x) {
-    
-    run_indval(
-      
-      group_value = x,
-      
-      group_variable = "PSU",
-      
-      metadata = Plotdata,
-      
-      spp = c1spp,
-      
-      output_dir = output_dir,
-      
-      cycle = "c1",
-      
-      alpha = 0.05,
-      
-      nperm = 9999
-    )
-    
+if (nrow(psu_results) > 0) {
+  psu_results <- psu_results %>% arrange(Group, p.value, desc(stat))
   }
-  
-)
+
+# ================================================================
+# 24. SORT DIAGNOSTIC TABLES
+# ================================================================
+region_diagnostics <- region_diagnostics %>% arrange(Group)
+psu_diagnostics <- psu_diagnostics %>% arrange(Group)
 
 
-# ======================================================================
-# 26. COMBINE PSU RESULTS
-# ======================================================================
-
-psu_results <- bind_rows(
-  psu_results_list
-)
-
-
-# Save combined PSU results
-write.csv(
-  
-  psu_results,
-  
-  file.path(
-    output_dir,
-    "c1_All_PSU_Indicator_Species_Results.csv"
-  ),
-  
-  row.names = FALSE
-)
+# ================================================================
+# 25. WRITE COMBINED REGION RESULTS
+# ================================================================
+write.csv(region_results, 
+          file.path(output_dir, "c1_All_Region_Indicator_Species_Results.csv"),
+          row.names = FALSE)
 
 
-cat(
-  "\nTotal significant PSU associations:",
-  nrow(psu_results),
-  "\n"
-)
+# ================================================================
+# 26. WRITE COMBINED PSU RESULTS
+# ================================================================
+write.csv(psu_results,
+  file.path(output_dir, "c1_All_PSU_Indicator_Species_Results.csv"), row.names = FALSE)
 
 
-# ======================================================================
-# 27. CREATE PSU DIAGNOSTIC TABLE
-# ======================================================================
+# ================================================================
+# 27. WRITE REGION DIAGNOSTICS
+# ================================================================
+write.csv(region_diagnostics, 
+          file.path(output_dir,
+                    "c1_Region_Indicator_Species_Diagnostics.csv"),
+          row.names = FALSE)
 
-PSU_diagnostics <- Plotdata %>%
-  
-  group_by(PSU) %>%
-  
-  summarise(
-    
-    Number_of_Plots = n(),
-    
-    Number_of_Habitats = n_distinct(
-      habitat,
-      na.rm = TRUE
-    ),
-    
-    Habitats = paste(
-      sort(unique(habitat)),
-      collapse = "; "
-    ),
-    
-    .groups = "drop"
-  )
+# ================================================================
+# 28. WRITE PSU DIAGNOSTICS
+# ================================================================
+write.csv(psu_diagnostics, 
+          file.path(output_dir,
+                    "c1_PSU_Indicator_Species_Diagnostics.csv"),
+          row.names = FALSE)
 
 
-# Add number of species represented within each PSU
-PSU_species_counts <- lapply(
-  
-  PSU_diagnostics$PSU,
-  
-  function(x) {
-    
-    keep <- Plotdata$PSU == x
-    
-    spp_temp <- c1spp[
-      keep,
-      ,
-      drop = FALSE
-    ]
-    
-    sum(
-      colSums(
-        spp_temp,
-        na.rm = TRUE
-      ) > 0
-    )
-    
-  }
-  
-)
+# ================================================================
+# 29. DISPLAY ANALYSIS SUMMARY
+# ================================================================
+cat("\n\n========================================\n",
+    "CYCLE 1 ANALYSIS COMPLETE\n",
+    "========================================\n")
+cat("\nREGION ANALYSIS\n")
+cat("Regions evaluated:", nrow(region_diagnostics), "\n")
+cat("Regions completed:", sum(region_diagnostics$Status == "Completed"), "\n")
+cat("Regions skipped:", sum(region_diagnostics$Status == "Skipped"), "\n")
+cat("Regions with errors:", sum(region_diagnostics$Status == "Error"), "\n")
+cat("Significant Region indicators:",nrow(region_results),"\n")
+cat("\nPSU ANALYSIS\n")
+cat("PSUs evaluated:", nrow(psu_diagnostics), "\n")
+cat("PSUs completed:", sum(psu_diagnostics$Status == "Completed"), "\n")
+cat("PSUs skipped:",sum(psu_diagnostics$Status == "Skipped"), "\n")
+cat("PSUs with errors:", sum(psu_diagnostics$Status == "Error"), "\n")
+cat("Significant PSU indicators:", nrow(psu_results), "\n")
 
 
-PSU_diagnostics$Number_of_Species <- unlist(
-  PSU_species_counts
-)
+# ================================================================
+# 30. DISPLAY DIAGNOSTIC TABLES
+# ================================================================
+cat("\n\nREGION DIAGNOSTICS\n")
+print(region_diagnostics, row.names = FALSE)
+cat("\n\nPSU DIAGNOSTICS\n")
+print(psu_diagnostics,row.names = FALSE)
 
-
-# Determine whether PSU has enough habitat groups
-PSU_diagnostics <- PSU_diagnostics %>%
-  
-  mutate(
-    
-    Analysis_Status = case_when(
-      
-      Number_of_Plots < 2 ~
-        "Not analyzed: fewer than 2 plots",
-      
-      Number_of_Habitats < 2 ~
-        "Not analyzed: only one habitat",
-      
-      Number_of_Species == 0 ~
-        "Not analyzed: no species",
-      
-      TRUE ~
-        "Eligible for analysis"
-    )
-    
-  )
-
-
-# Save PSU diagnostics
-write.csv(
-  
-  PSU_diagnostics,
-  
-  file.path(
-    output_dir,
-    "c1_PSU_Analysis_Diagnostics.csv"
-  ),
-  
-  row.names = FALSE
-)
-
-
-# ======================================================================
-# 28. CREATE REGION DIAGNOSTIC TABLE
-# ======================================================================
-
-Region_diagnostics <- Plotdata %>%
-  
-  group_by(Region) %>%
-  
-  summarise(
-    
-    Number_of_Plots = n(),
-    
-    Number_of_PSUs = n_distinct(
-      PSU
-    ),
-    
-    Number_of_Habitats = n_distinct(
-      habitat,
-      na.rm = TRUE
-    ),
-    
-    Habitats = paste(
-      sort(unique(habitat)),
-      collapse = "; "
-    ),
-    
-    .groups = "drop"
-  )
-
-
-# Save Region diagnostics
-write.csv(
-  
-  Region_diagnostics,
-  
-  file.path(
-    output_dir,
-    "c1_Region_Analysis_Diagnostics.csv"
-  ),
-  
-  row.names = FALSE
-)
-
-
-# ======================================================================
-# 29. FINAL SUMMARY
-# ======================================================================
-
-cat("\n")
-cat("====================================================\n")
-cat("CYCLE 1 INDICATOR SPECIES ANALYSIS COMPLETE\n")
-cat("====================================================\n")
-
-cat(
-  "Plots analyzed:",
-  nrow(c1spp),
-  "\n"
-)
-
-cat(
-  "Species analyzed:",
-  ncol(c1spp),
-  "\n"
-)
-
-cat(
-  "Regions considered:",
-  length(regions_to_analyze),
-  "\n"
-)
-
-cat(
-  "PSUs considered:",
-  length(psus_to_analyze),
-  "\n"
-)
-
-cat(
-  "Significant Region indicator associations:",
-  nrow(region_results),
-  "\n"
-)
-
-cat(
-  "Significant PSU indicator associations:",
-  nrow(psu_results),
-  "\n"
-)
-
-cat(
-  "\nResults saved to:\n",
-  output_dir,
-  "\n"
-)
-
-cat("====================================================\n")
+# ================================================================
+# END
+# ================================================================
 
