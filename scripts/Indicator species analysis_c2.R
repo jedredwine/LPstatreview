@@ -84,6 +84,25 @@ c2_cover$Species <- toupper(c2_cover$Species)
 # Remove species XXXXXX
 c2_cover <- c2_cover[c2_cover$Species != "XXXXXX", ]
 
+
+# Check unique species
+sort(unique(c2_cover$Species))
+
+## Use grep() to remove all UNKNOWN species. They start with UNK
+c2_cover <- c2_cover[!grepl("^UNK", c2_cover$Species, ignore.case = TRUE), ]
+
+sort(unique(c2_cover$Species))
+
+
+### List unique PSU
+sort(unique(c2_cover$PSU))
+
+#Remove BS1, BS2, BS3 DPM and 513 
+c2_cover <- c2_cover[!grepl("BS1|BS2|BS3|DPM|513", c2_cover$PSU), ]
+sort(unique(c2_cover$PSU))
+str(c2_cover)
+
+
 # ================================================================
 # 4. CREATE SPECIES-BY-PLOT MATRIX
 # ================================================================

@@ -62,7 +62,6 @@ c1_cover <- read.csv("C:/Users/druge/Dropbox/PROJECTS/GitHub/FIU/LPstatreview/da
 c1_cover <- subset(c1_cover, Cycle == "C1")
 c1_cover <- subset(c1_cover, select = c("PlotID", "SPCODE", "Cover"))
 
-
 ### Get PSU from another file
 PSUs <- read.csv("C:/Users/druge/Dropbox/PROJECTS/GitHub/FIU/LPstatreview/data/processed/C123_Yr1_5_ALL Plots_envData.csv", header = TRUE)
 
@@ -74,6 +73,19 @@ c1_cover <- merge(PSUs, c1_cover, by.x = "PlotID_New", by.y = "PlotID")
 colnames(c1_cover) <- c("PlotID", "PSU", "Species", "Cover")
 str(c1_cover)
 
+# Check unique species
+sort(unique(c1_cover$Species))
+
+## Use grep() to remove all UNKNOWN species. They start with UNK
+c1_cover <- c1_cover[!grepl("^UNK", c1_cover$Species, ignore.case = TRUE), ]
+
+sort(unique(c1_cover$Species))
+
+#Remove BS1, BS2, BS3 DPM and 513 
+c1_cover <- c1_cover[!grepl("BS1|BS2|BS3|DPM|513", c1_cover$PSU), ]
+sort(unique(c1_cover$PSU))
+str(c1_cover)
+
 # ================================================================
 # 4. CREATE SPECIES-BY-PLOT MATRIX
 # ================================================================
@@ -82,12 +94,7 @@ c1_species_matrix <- dcast(c1_cover, PSU + PlotID ~ Species, value.var = "Cover"
 
 # View column names
 colnames(c1_species_matrix)
-# 
-# # Remove X added by R to species names beginning with numbers
-# names(c1_species_matrix) <- sub(
-#   "^X",
-#   "",
-#   names(c1_species_matrix))
+
 
 # ================================================================
 # 5. LOAD REGION INFORMATION
