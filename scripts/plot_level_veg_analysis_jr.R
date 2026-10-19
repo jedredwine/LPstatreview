@@ -73,10 +73,10 @@ head(veg)
 # ------------------------------------------------------------------------------
 # # add mean cover by functional class
 # # load functional type class table
-# fnc_tbl <- read.csv('./data/processed/spp_functional_types.csv')
-# 
+fnc_tbl <- read.csv('./data/processed/spp_functional_types.csv')
+
 # # join functional class to vegetation data
-# merge(veg_all,fnc_tbl,by= "SPCODE", x.all=TRUE)
+veg_all <- merge(veg_all,fnc_tbl,by= "SPCODE", x.all=TRUE)
 # ------------------------------------------------------------------------------
 
 # load plot classification data
@@ -85,7 +85,7 @@ plot_cls <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_locations_habs_smpl.
 head(plot_cls);nrow(plot_cls)
 table(plot_cls$PSU,plot_cls$hab_09)
 
-identical(habs$C123_Plot_, plot_cls$C123_Plot_SNO) #determines that files contain identically sorted rows
+# identical(habs$C123_Plot_, plot_cls$C123_Plot_SNO) #determines that files contain identically sorted rows
 
 plot_cls_hab <- as.data.frame(plot_cls[plot_cls$hab_09 != '',])
 head(plot_cls_hab)
