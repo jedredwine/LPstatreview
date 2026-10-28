@@ -23,16 +23,19 @@ psus_region <- ggplot(psu_sp) +
   geom_sf(aes(fill = Region)) +
   geom_sf_text(aes(label = PSU_N), size = 3) +
   theme_minimal()
-psus_region
+psus_region # plots the PSUs contained in the valid design and displays PSU number colored by region
 
 ggsave("./figures/psus_x_region_nums.jpg", width = 6, height = 4, units = "in")
+
 
 # PSU list
 psu_list <- psu_sp$PSU_N
 psu_list <- psu_list[order(psu_list)]
 length(psu_list)
+
 # ------------------------------------------------------------------------------
 # load updated PSU data (modified Gann -- removed all PSUs outside of scope)
+# JR - this is the same information as the file
 psu <- read.csv('./data/processed/C123_Yr1-5_PSU_Sampled.csv')
 head(psu)
 nrow(psu)
@@ -52,22 +55,29 @@ nrow(veg_all)
 sp_list <- as.data.frame(table(veg_all$SPCODE));names(sp_list) <- c('SPCODE','freq')
 
 # write to table
-write.csv(sp_list,'./data/processed/C123_Yr1_5_ALL_SppCover_list_freq.csv')
+# write.csv(sp_list,'./data/processed/C123_Yr1_5_ALL_SppCover_list_freq.csv') #only needed to be written once
 # ------------------------------------------------------------------------------
 # check PSU count and plot surveys
-veg <- veg_all[veg_all$PSU %in% psu_valid,]
+veg <- veg_all[veg_all$PSU %in% psu_valid,] #filters veg information down to only observations within statistical design PSUs
 nrow(veg)
 
 table(veg$PSUID)
 length(unique(veg$PSUID))
 
+# species list
+sp_list_des <- as.data.frame(table(veg$SPCODE));names(sp_list) <- c('SPCODE','freq')
+
 # add Custer ID
 veg$ClusterID <- substring(veg$PlotID,1,6)
 
 # add plot ID
-veg$PlotID_Cycle <- paste(veg$PlotID,veg$Cycle,sep='_')
+veg$PlotID_Cycle <- paste(veg$PlotID,veg$Cycle,sep='_') #this serves as unique identifier of each sampling plot
 
 # convert cover to numeric
+# develop a list of cover values and identify the frequency of their occurrence
+cover_val_list <- as.data.frame(table(veg$Cover));names(cover_val_list) <- c('Cover','freq') 
+na_rows <- veg[veg$Cover == "-999",]
+
 veg$Cover <- as.integer(veg$Cover)
 head(veg)
 # ------------------------------------------------------------------------------
@@ -76,7 +86,7 @@ head(veg)
 fnc_tbl <- read.csv('./data/processed/spp_functional_types.csv')
 
 # # join functional class to vegetation data
-veg_all <- merge(veg_all,fnc_tbl,by= "SPCODE", x.all=TRUE)
+veg_all <- merge(veg,fnc_tbl,by= "SPCODE", x.all=TRUE)
 # ------------------------------------------------------------------------------
 
 # load plot classification data
@@ -108,7 +118,7 @@ rgn_cur <- rgn_valid[grepl(rgn, rgn_valid, fixed = TRUE)]
 psu_cur <- psu$PSU_ID[psu$Region %in% rgn_cur]
 
 # subset plots for ROI
-veg_cur <- veg[veg$PSUID %in% psu_cur,]
+veg_cur <- veg_all[veg$PSUID %in% psu_cur,]
 head(veg_cur)
 # ------------------------------------------------------------------------------
 plot_list_cycle <- as.data.frame(unique(veg_cur$PlotID_Cycle));names(plot_list_cycle) <- 'PlotID_Cycle'
@@ -120,8 +130,8 @@ soi_list <- c('CLAJAM','TYPDOM','ELECEL','NYMODO','NYMAQU','UTRPUR')
 # generate plot_cycle_soi table
 cy_list <- c('C1','C2','C3')
 
-# Generate combinations
-combos <- expand.grid(list(plot_list_cycle[,1],soi_list),stringsAsFactors = FALSE)
+# # Generate combinations
+# combos <- expand.grid(list(plot_list_cycle[,1],soi_list),stringsAsFactors = FALSE)
 
 # join with underscore
 plot_cycle_sp_list <- as.data.frame(apply(combos, 1, paste, collapse = "_"));names(plot_cycle_sp_list) <- 'plot_cycle_sp'
@@ -133,10 +143,10 @@ plot_cycle_sp_list <- merge(plot_cycle_sp_list,plot_cls[c('PlotID_New','hab_09',
 head(plot_cycle_sp_list)
 # ------------------------------------------------------------------------------
 # ...
-veg_cur$plot_cycle_sp <- paste(veg_cur$PlotID_Cycle,veg_cur$SPCODE,sep='_')
+veg_cur$plot_cycle_sp <- paste(veg_cur$PlotID_Cycle,veg_cur$FNCODE,sep='_')
 
 # merge data frames outer left join
-veg_anl <- merge(plot_cycle_sp_list,veg_cur[,c('plot_cycle_sp','SPCODE','Cover')],by='plot_cycle_sp',all.x=TRUE)
+veg_anl <- merge(plot_cycle_sp_list,veg_cur[,c('plot_cycle_sp','FNCODE','Cover')],by='plot_cycle_sp',all.x=TRUE)
 head(veg_anl,200)
 veg_anl$SPCODE <- substring(veg_anl$plot_cycle_sp,13,18)
 veg_anl$Cover[is.na(veg_anl$Cover)] <- 0
