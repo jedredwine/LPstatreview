@@ -259,6 +259,17 @@ plot_means <- vg_mdl.new %>%
   as.data.frame() #doesn't work
 table(vg_mdl.new$Cycle)
 
+<<<<<<< HEAD
+=======
+# vc_fit <- function(d) {
+#   m0 <- gls(y ~ 1, data = vg_mdl.new, method = "REML")
+#   m1 <- lme(y ~ 1, random = ~ 1 | PSU_u,         data = vg_mdl.new, method = "REML")
+#   m2 <- lme(y ~ 1, random = ~ 1 | PSU_u/Cl_u,    data = vg_mdl.new, method = "REML")
+#    list(tests = anova(m0, m1, m2), m2 = m2)
+# }
+# groups <- c("ridge", "slough", "transition")
+# res <- lapply(groups, function(g) vc_fit(subset(plot_means, FNCODE == g)))
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
 vg_mdl.new$p   <- pmin(pmax(vg_mdl.new$total_cover, 0), 100) / 100
 vg_mdl.new$p_b <- pmin(vg_mdl.new$p, 0.999)
@@ -312,7 +323,11 @@ pairs(emm_r)                                        # region-specific change res
 library(dplyr); library(ggplot2); library(forcats)
 
 fn_cols <- c(ridge = "#2E7D32", slough = "#1976D2", transition = "#F9A825")
+<<<<<<< HEAD
 lvh <- c("ridge", "slough", "trans")
+=======
+lvh <- c("ridge", "slough", "transition")
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 lvf <- c("ridge", "slough", "transition", "UK")
 
 plot_cov <- vg_mdl.new %>%
@@ -320,7 +335,11 @@ plot_cov <- vg_mdl.new %>%
   dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, PlotID, hab_09, FNCODE) %>%
   dplyr::summarise(cover = mean(total_cover, na.rm = TRUE), .groups = "drop") %>%
   dplyr::mutate(FNCODE = factor(FNCODE, levels = lvf),
+<<<<<<< HEAD
          hab_09 = factor(hab_09, levels = lvh))
+=======
+         hab_09 = factor(hab_09, levels = lvh), Cycle  = factor(Cycle))
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
 summ_level <- function(df, level) {
   df %>%
@@ -363,7 +382,11 @@ p_region_cyc <- summ_level_cyc(plot_cov_cyc, "Region") %>%
         strip.text.x = element_text(size = 7))
 p_region_cyc
 
+<<<<<<< HEAD
 ggsave(paste0('./figures/func_hab/Ftype_by_hab_in_RegionXcycle.jpeg'), 
+=======
+ggsave(paste0('./figures/func_hab/Ftyope_by_hab_in_RegionXcycle.jpeg'), 
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
        plot = p_region_cyc, width = 10, height = 10, dpi = 400, device = "jpeg")
 
 #####################
@@ -389,6 +412,7 @@ p_cluster_cyc
 # by region as well
 p_cluster_cyc_reg <- p_cluster_cyc + facet_grid(hab_09 ~ Region)
 p_cluster_cyc_reg
+<<<<<<< HEAD
 out_dir <- "./figures/func_hab"
 
 ggsave(file.path(out_dir, "cover_by_cluster_cycle.png"),
@@ -397,6 +421,13 @@ ggsave(file.path(out_dir, "cover_by_cluster_cycle_region.png"),
        plot = p_cluster_cyc_reg, width = 16, height = 7, dpi = 300)
 
 
+=======
+
+ggsave(file.path(out_dir, "cover_by_cluster_cycle.png"),
+       p_cluster_cyc, width = 9, height = 5, dpi = 300)
+ggsave(file.path(out_dir, "cover_by_cluster_cycle_region.png"),
+       p_cluster_cyc_reg, width = 16, height = 7, dpi = 300)
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
 ################################
 
@@ -462,10 +493,13 @@ for (p in psu_list) {
   ggsave(file.path(out_dir, paste0("cluster_cover_cycle_PSU_traj", p, ".png")),
          plot_psu_traj(p), width = 9, height = 5, dpi = 300)
 }
+<<<<<<< HEAD
 pdf(file.path(out_dir, "cluster_cover_by_psu_cycle_PSU_traj.pdf"), width = 9, height = 5)
 for (p in psu_list) print(plot_psu_traj(p))
 dev.off()
 
+=======
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 ####################
 #2. PSUs: heatmap with one row per PSU
 
@@ -485,7 +519,10 @@ p_psu <- ggplot(psu_sum, aes(combo, PSU_u, fill = mean)) +
         strip.text.y = element_text(angle = 0, size = 7),
         legend.position = "right")
 p_psu
+<<<<<<< HEAD
 ggsave(file.path(out_dir, "cover_by_psu.png"),  plot =p_psu,     width = 8,  height = 12, dpi = 300)
+=======
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
 #####################
 #3. Clusters: how to show 16 clusters × 53 PSUs
@@ -507,10 +544,14 @@ p_cluster <- ggplot(cl_means, aes(hab_09, cover, fill = FNCODE)) +
   theme_bw() + theme(legend.position = "bottom")
 
 p_cluster + facet_wrap(~ Region, ncol = 5)
+<<<<<<< HEAD
 ggsave(file.path(out_dir, "cover_by_cluster.png"),
        p_cluster + facet_wrap(~ Region, ncol = 5),
        width = 12, height = 6, dpi = 300)
 graphics.off()
+=======
+
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
 plot_psu_clusters <- function(psu) {
   plot_cov %>%
@@ -531,18 +572,32 @@ plot_psu_clusters <- function(psu) {
 plot_psu_clusters(levels(plot_cov$PSU_u)[1])
 
 # save one page per PSU
+<<<<<<< HEAD
 # out_dir <- "./figures/func_hab"
 # dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+=======
+out_dir <- "./figures/func_hab"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
 pdf(file.path(out_dir, "clusters_by_psu.pdf"), width = 9, height = 6)
 for (p in levels(plot_cov$PSU_u)) print(plot_psu_clusters(p))
 dev.off()
 
 #save plots#
+<<<<<<< HEAD
 ggsave(file.path(out_dir, "cover_by_cluster.png"),
        p_cluster + facet_wrap(~ Region, ncol = 5),
        width = 12, height = 6, dpi = 300)
 dev.off()
+=======
+ggsave(file.path(out_dir, "cover_by_region.png"),  p_region,  width = 12, height = 6,  dpi = 300)
+ggsave(file.path(out_dir, "cover_by_psu.png"),     p_psu,     width = 8,  height = 12, dpi = 300)
+ggsave(file.path(out_dir, "cover_by_cluster.png"),
+       p_cluster + facet_wrap(~ Region, ncol = 5),
+       width = 12, height = 6, dpi = 300)
+
+>>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 list.files(out_dir)
 
 #DHARMa model checks
