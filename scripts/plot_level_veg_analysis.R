@@ -47,7 +47,7 @@ nrow(veg_all)
 sp_list <- as.data.frame(table(veg_all$SPCODE));names(sp_list) <- c('SPCODE','freq')
 
 # write to table
-write.csv(sp_list,'./data/processed/C123_Yr1_5_ALL_SppCover_list_freq.csv')
+# write.csv(sp_list,'./data/processed/C123_Yr1_5_ALL_SppCover_list_freq.csv')
 # ------------------------------------------------------------------------------
 # check PSU count and plot surveys
 veg <- veg_all[veg_all$PSU %in% psu_valid,]
@@ -142,56 +142,56 @@ veg_anl$Cycle <- substring(veg_anl$plot_cycle_sp,10,11)
 
 # ------------------------------------------------------------------------------
 # test for spatial autocorrelation to test assumption that samples could have been drawn with simple random procedure
-soi <- "CLAJAM"
-
-for (PSU in psu_cur){
-  veg_anl_PSU <- veg_anl[veg_anl$PSUID == PSU,]
-  head(veg_anl_PSU)
-  
-  # test for spatial autocorrelation to test assumption that samples could have been drawn with simple random procedure
-  for (cy in cy_list){
-    
-    soi_PSU_cy <- veg_anl_PSU[veg_anl_PSU$SPCODE == soi & veg_anl_PSU$Cycle == cy,]
-    if(nrow(soi_PSU_cy) > 5){
-      
-      mdl_0 <- lm(Cover ~ 1, data = soi_PSU_cy)
-      
-      # spatial weights matrix
-      suppressWarnings({nb_points <- knn2nb(knearneigh(soi_PSU_cy[, c("C3_X_NAD83", "C3_Y_NAD83")], k = 7))})
-      listw_points <- nb2listw(nb_points, style = "W")
-      
-      # test spatial autocorrelation in residuals Null: no spatial autocorrelation
-      test_stat <- lm.morantest(mdl_0, listw_points)
-      print(paste0("FOr ",soi," in ",PSU," and Cycle",cy,", p-value for M-I is:",test_stat$p.value))
-    }
-  }
-}
+# soi <- "CLAJAM"
+# 
+# for (PSU in psu_cur){
+#   veg_anl_PSU <- veg_anl[veg_anl$PSUID == PSU,]
+#   head(veg_anl_PSU)
+#   
+#   # test for spatial autocorrelation to test assumption that samples could have been drawn with simple random procedure
+#   for (cy in cy_list){
+#     
+#     soi_PSU_cy <- veg_anl_PSU[veg_anl_PSU$SPCODE == soi & veg_anl_PSU$Cycle == cy,]
+#     if(nrow(soi_PSU_cy) > 5){
+#       
+#       mdl_0 <- lm(Cover ~ 1, data = soi_PSU_cy)
+#       
+#       # spatial weights matrix
+#       suppressWarnings({nb_points <- knn2nb(knearneigh(soi_PSU_cy[, c("C3_X_NAD83", "C3_Y_NAD83")], k = 7))})
+#       listw_points <- nb2listw(nb_points, style = "W")
+#       
+#       # test spatial autocorrelation in residuals Null: no spatial autocorrelation
+#       test_stat <- lm.morantest(mdl_0, listw_points)
+#       print(paste0("FOr ",soi," in ",PSU," and Cycle",cy,", p-value for M-I is:",test_stat$p.value))
+#     }
+#   }
+# }
 # ------------------------------------------------------------------------------
 # for PSU of interest and species of interest (SOI) plot habitat specific species abundance trends
-for (PSU in psu_cur){
-  veg_anl_PSU <- veg_anl[veg_anl$PSUID == PSU,]
-  head(veg_anl_PSU)
-  
-  # summarySE provides the standard deviation, standard error of the mean, and a (default 95%) confidence interval
-  stats <- summarySE(veg_anl_PSU, measurevar="Cover", groupvars=c("Cycle","SPCODE","habitat"))
- 
-  p <- ggplot(veg_anl_PSU, aes(x = Cycle, y = Cover, group = habitat,color=habitat)) +
-    geom_line(aes(group = PlotID), colour = "grey70", alpha = 0.7) +
-    geom_point(aes(group = PlotID), colour = "grey30", size = 1.5) +
-    #geom_errorbar() +
-    stat_summary(fun = mean, geom = "point",size = 3.5) +
-    stat_summary(fun = mean, geom = "line", size = 1.2) +
-    labs(title = paste("Species Cover Change in PSU",PSU),
-         x = "Cycle", y = "Cover") +
-    theme_minimal(base_size = 13) +
-    facet_wrap(~ SPCODE)
-
-  # plot change of SOI of plot by PSU
-  ggsave(paste0('./figures/SOI_trend_by_PSU/',PSU,'_SOI_trend.jpg'), 
-         plot = p, width = 10, height = 10, dpi = 400, device = "jpeg")
-  
-  # write summary stats to file
-  write.csv(stats,paste0('./figures/SOI_trend_by_PSU/',PSU,'_SOI_trend_stats.csv'))
+# for (PSU in psu_cur){
+#   veg_anl_PSU <- veg_anl[veg_anl$PSUID == PSU,]
+#   head(veg_anl_PSU)
+#   
+#   # summarySE provides the standard deviation, standard error of the mean, and a (default 95%) confidence interval
+#   stats <- summarySE(veg_anl_PSU, measurevar="Cover", groupvars=c("Cycle","SPCODE","habitat"))
+#  
+#   p <- ggplot(veg_anl_PSU, aes(x = Cycle, y = Cover, group = habitat,color=habitat)) +
+#     geom_line(aes(group = PlotID), colour = "grey70", alpha = 0.7) +
+#     geom_point(aes(group = PlotID), colour = "grey30", size = 1.5) +
+#     #geom_errorbar() +
+#     stat_summary(fun = mean, geom = "point",size = 3.5) +
+#     stat_summary(fun = mean, geom = "line", size = 1.2) +
+#     labs(title = paste("Species Cover Change in PSU",PSU),
+#          x = "Cycle", y = "Cover") +
+#     theme_minimal(base_size = 13) +
+#     facet_wrap(~ SPCODE)
+# 
+#   # plot change of SOI of plot by PSU
+#   ggsave(paste0('./figures/SOI_trend_by_PSU/',PSU,'_SOI_trend.jpg'), 
+#          plot = p, width = 10, height = 10, dpi = 400, device = "jpeg")
+#   
+#   # write summary stats to file
+#   write.csv(stats,paste0('./figures/SOI_trend_by_PSU/',PSU,'_SOI_trend_stats.csv'))
 
   # # for species of interest (SOI) test for significance of change
   # for (soi in soi_list){
