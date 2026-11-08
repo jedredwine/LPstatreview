@@ -12,13 +12,15 @@ library(ggplot2)
 library(readr)
 #-------------------------------------------------------------------------------
 # load data
-locs <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_locations.csv')
+locs <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_locations_20261105.csv')
 head(locs);nrow(locs)
 
 habs <- read.csv('./data/raw_data/C123_Yr1_5_ALLPlots_locations_Johan_Habitat.csv')
 head(habs);nrow(habs)
 
 identical(habs$C123_Plot_, locs$C123_Plot_SNO) #determines that files contain identically sorted rows
+
+
 #-------------------------------------------------------------------------------
 
 #merge datasets by adding new columns created by Johan to locs dataset (locs is the processed dataset)
@@ -58,7 +60,8 @@ write_csv(locs_final, "./data/processed/C123_Yr1_5_ALL Plots_locations_habs_smpl
 env$hab_09 <- locs_final$C123_Plot_SNO== paste(env$PSU,env$PLOT)
 env$PSU_PLOT <- paste0(env$PSU,env$PLOT)
 
-# merge habitat data to plot vegetation data 
+# merge habitat data to plot vegetation data - This isn't working at the moment, but that is OK 11/5/2026
+env <- read.csv('./data/processed/envData_cln.csv')
 env2 <- merge(env,locs_final[c('PlotID_New','hab_09')], by.x='PSU_PLOT', by.y='PlotID_New')
 head(env2)
 

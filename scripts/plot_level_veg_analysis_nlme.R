@@ -9,6 +9,7 @@
 library(sf)
 library(terra)
 library(tidyr)
+library(gt)
 library(dplyr)
 library(ggplot2)
 library(rstatix)
@@ -128,11 +129,11 @@ veg_cln <- merge(veg_cln,fnc_tbl,by= "SPCODE", x.all=TRUE)
 plot_cls <- read.csv('./data/processed/C123_Yr1_5_ALL Plots_locations_habs_smpl.csv')
 #x11();plot(plot_cls)
 head(plot_cls);nrow(plot_cls)
-table(plot_cls$PSU,plot_cls$hab_09)
+table(plot_cls$PSU,plot_cls$hab_25)
 
 # identical(habs$C123_Plot_, plot_cls$C123_Plot_SNO) #determines that files contain identically sorted rows
 
-plot_cls_hab <- as.data.frame(plot_cls[plot_cls$hab_09 != '',])
+plot_cls_hab <- as.data.frame(plot_cls[plot_cls$hab_25 != '',])
 head(plot_cls_hab) #this is QC'd dataframe of siample locations and habitat characterizations will be fused with veg data subsequently
 # ------------------------------------------------------------------------------
 
@@ -144,10 +145,12 @@ head(plot_cls_hab) #this is QC'd dataframe of siample locations and habitat char
 #     -- loop over all species of interest
 
 # set region of interest
-rgn <- 'ENP'
+# rgn <- 'ENP'
+rgn <- unique(veg_cln$Region)
 
 # select sub-regions that match region of interest
-rgn_cur <- rgn_valid[grepl(rgn, rgn_valid, fixed = TRUE)] 
+# rgn_cur <- rgn_valid[grepl(rgn, rgn_valid, fixed = TRUE)]
+rgn_cur <- rgn
 
 # subset PSU list for ROI
 psu_cur <- psu$PSU_ID[psu$Region %in% rgn_cur]
@@ -161,7 +164,7 @@ plot_list_cycle$PlotID <- substr(plot_list_cycle$PlotID_Cycle,1,8)
 
 
 # ------------------------------------------------------------------------------
-# remove all plots other than cycle 1
+# Control whether to remove cycles or alter function attribute descriptions
 cy_list <- c('C1','C2','C3')
 fn_list <- unique(fnc_tbl$FNCODE)
 
@@ -243,10 +246,13 @@ vg_mdl.new <- as.data.frame(vg_mdl.1) %>%
   mutate(
     PSU_u = interaction(Region, PSUID, drop = TRUE),
     Cl_u  = interaction(PSU_u, ClusterID, drop = TRUE),
-    p     = pmin(total_cover, 100) / 100,
+    p     = pmin(total_cover, 100) / 100,               #proportionalized cover for beta regression
     y     = asin(sqrt(p))                                      # or qlogis() with an offset
   )
 mean(vg_mdl.new$total_cover == 0)
+
+
+
 
 plot_means <- vg_mdl.new %>%
   dplyr::group_by(FNCODE, Region, PSU_u, Cl_u, PlotID) %>%
@@ -259,23 +265,19 @@ plot_means <- vg_mdl.new %>%
   as.data.frame() #doesn't work
 table(vg_mdl.new$Cycle)
 
-<<<<<<< HEAD
-=======
-# vc_fit <- function(d) {
-#   m0 <- gls(y ~ 1, data = vg_mdl.new, method = "REML")
-#   m1 <- lme(y ~ 1, random = ~ 1 | PSU_u,         data = vg_mdl.new, method = "REML")
-#   m2 <- lme(y ~ 1, random = ~ 1 | PSU_u/Cl_u,    data = vg_mdl.new, method = "REML")
-#    list(tests = anova(m0, m1, m2), m2 = m2)
-# }
-# groups <- c("ridge", "slough", "transition")
-# res <- lapply(groups, function(g) vc_fit(subset(plot_means, FNCODE == g)))
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
 vg_mdl.new$p   <- pmin(pmax(vg_mdl.new$total_cover, 0), 100) / 100
 vg_mdl.new$p_b <- pmin(vg_mdl.new$p, 0.999)
 vg_mdl.new <- vg_mdl.new[!is.na(vg_mdl.new$p_b), ]
-
 stopifnot(all(vg_mdl.new$p_b >= 0 & vg_mdl.new$p_b < 1))
+# Quick diagnostic box plot
+boxplot(vg_mdl.new$p_b, 
+        main = "Diagnostic Boxplot of Total_pct_cover", 
+        ylab = "Values", 
+        col = "lightblue")
+
+write.csv(vg_mdl.new,'./data/processed/vg_mdl.new.csv')
+
 
 #model fitting process compares a set of models of increasing complexity to address two distinct questions:
 # 1. Do the spatial groupings explain variation in mean cover (random intercepts)?
@@ -287,84 +289,325 @@ stopifnot(all(vg_mdl.new$p_b >= 0 & vg_mdl.new$p_b < 1))
 # repeated measures.
 
 ########################################################################################
-fit_group <- function(g) {
-  d <- droplevels(subset(vg_mdl.new, FNCODE == g))
-  f <- list(family = beta_family(link = "logit"), ziformula = ~ 1, data = d)
-  
-  # 1. random-intercept structure (spatial levels of mean cover)
-  m0 <- glmmTMB(p_b ~ Region * Cycle + (1 | PlotID), family = beta_family(link = "logit"), 
-                  ziformula = ~1, data = vg_mdl.new)
-  m1 <- update(m0, . ~ . + (1 | PSU_u))
-  m2 <- update(m1, . ~ . + (1 | Cl_u))
-  
-  # 2. fixed effects of change (refit best random structure)
-  m_add <- update(m2, . ~ . - Region:Cycle)       # no Region x Cycle
-  m_noc <- update(m_add, . ~ . - Cycle)           # no Cycle at all
-  
-  list(data = d, m0 = m0, m1 = m1, m2 = m2, m_add = m_add, m_noc = m_noc)
-}
+# fit_group <- function(g) {
+#   d <- droplevels(subset(vg_mdl.new, FNCODE == g))
+#   f <- list(family = beta_family(link = "logit"), ziformula = ~ 1, data = d)
+#   
+#   # 1. random-intercept structure (spatial levels of mean cover)
+#   m0 <- glmmTMB(p_b ~ Region * Cycle + (1 | PlotID), family = beta_family(link = "logit"), 
+#                   ziformula = ~1, data = vg_mdl.new)
+#   m1 <- update(m0, . ~ . + (1 | PSU_u))
+#   m2 <- update(m1, . ~ . + (1 | Cl_u))
+#   
+#   # 2. fixed effects of change (refit best random structure)
+#   m_add <- update(m2, . ~ . - Region:Cycle)       # no Region x Cycle
+#   m_noc <- update(m_add, . ~ . - Cycle)           # no Cycle at all
+#   
+#   
+#   list(data = d, m0 = m0, m1 = m1, m2 = m2, m_add = m_add, m_noc = m_noc)
+# }
 
 groups <- c("ridge", "slough", "transition")
 res <- lapply(groups, fit_group); names(res) <- groups #this works 
-lapply(res, function(r) anova(r$m0, r$m1, r$m2))      # do PSU and Cluster matter?
+lapply(res, function(r) anova(r$M10_rand_slope_uncorr, r$M0_null, r$M7_slope_fixed))      # do PSU and Cluster matter?
 lapply(res, function(r) anova(r$m_noc, r$m_add, r$m2)) # Cycle effect, then Region x Cycle
 lapply(res, function(r) VarCorr(r$m2))
+# AIC(m0, m1, m2, m_add, M_noc)
+
 
 #Reporting Change
 library(emmeans)
-emm <- emmeans(res$ridge$m_add, ~ Cycle, type = "response")
+emm <- emmeans(res$ridge$models$M10_rand_slope_uncorr, ~ Cycle, type = "response")
 pairs(emm)                                          # C1 vs C2, C2 vs C3, C1 vs C3
 
-emm_r <- emmeans(res$ridge$m2, ~ Cycle | Region, type = "response")
+emm_r <- emmeans(res$ridge$models$M10_rand_slope_uncorr, ~ Cycle | Region, type = "response")
 pairs(emm_r)                                        # region-specific change results seem reasonable
+
+
+######################################
+#Table summary of plots observed in each cycle in each PSU - version 1 is across all cycles, 
+          # version 2 is only across C2 and C3
+
+###############
+#Table summary version 1: All Cycles
+
+## ---- Settings: choose and report these ---------------------------------------
+min_plots_per_cycle <- 40     # placeholder: flag a PSU if any cycle has fewer plots
+min_all_cycle_pct   <- 0.80   # placeholder: flag a PSU if fewer of its plots were sampled in all cycles
+
+## ---- 1. Observations actually available to the models ------------------------
+need <- c("p_b", "Region", "PSU_u", "Cl_u", "PlotID", "Cycle")
+
+obs <- dat %>%
+  dplyr::filter(FNCODE %in% c("ridge", "slough", "transition")) %>%
+  dplyr::filter(dplyr::if_all(dplyr::all_of(need), ~ !is.na(.x))) %>%
+  dplyr::distinct(Region, PSU_u, Cl_u, PlotID, Cycle) %>%
+  dplyr::mutate(Region = as.character(Region), PSU_u = as.character(PSU_u),
+                Cycle = as.character(Cycle))
+
+## ---- 2. Plots per PSU per cycle ----------------------------------------------
+by_cycle <- obs %>%
+  dplyr::group_by(Region, PSU_u, Cycle) %>%
+  dplyr::summarise(plots = dplyr::n_distinct(PlotID), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = Cycle, values_from = plots, values_fill = 0)
+
+cycle_cols <- sort(setdiff(names(by_cycle), c("Region", "PSU_u")))
+n_cycles   <- length(cycle_cols)
+
+## ---- 3. Clusters, plots, and plots sampled in every cycle --------------------
+plot_cyc <- obs %>%
+  dplyr::group_by(Region, PSU_u, Cl_u, PlotID) %>%
+  dplyr::summarise(n_cyc = dplyr::n_distinct(Cycle), .groups = "drop")
+
+extra <- plot_cyc %>%
+  dplyr::group_by(Region, PSU_u) %>%
+  dplyr::summarise(clusters = dplyr::n_distinct(Cl_u),
+                   plots_all = sum(n_cyc == n_cycles),
+                   plots_any = dplyr::n(), .groups = "drop")
+
+## ---- 4. Combine and flag -----------------------------------------------------
+tab_full <- by_cycle %>%
+  dplyr::left_join(extra, by = c("Region", "PSU_u")) %>%
+  dplyr::mutate(
+    total    = rowSums(dplyr::across(dplyr::all_of(cycle_cols))),
+    pct_all  = plots_all / plots_any,
+    min_cyc  = do.call(pmin, dplyr::across(dplyr::all_of(cycle_cols))),
+    flag     = min_cyc < min_plots_per_cycle | pct_all < min_all_cycle_pct
+  ) %>%
+  dplyr::arrange(Region, PSU_u)
+
+## ---- 5. Totals row -----------------------------------------------------------
+tot <- tab_full %>%
+  dplyr::summarise(dplyr::across(dplyr::all_of(c(cycle_cols, "clusters", "plots_all",
+                                                 "plots_any", "total")), sum)) %>%
+  dplyr::mutate(Region = "All regions", PSU_u = "Total",
+                pct_all = plots_all / plots_any, flag = FALSE)
+
+tab_out <- dplyr::bind_rows(tab_full, tot)
+
+## ---- 6. Press-ready table ----------------------------------------------------
+tab_gt <- tab_out %>%
+  dplyr::select(Region, PSU_u, dplyr::all_of(cycle_cols), total,
+                clusters, plots_all, pct_all) %>%
+  gt(groupname_col = "Region", rowname_col = "PSU_u") %>%
+  tab_header(
+    title    = "Sampling effort by PSU and cycle",
+    subtitle = "Number of plots with usable cover data in each cycle") %>%
+  tab_spanner(label = "Plots per cycle", columns = dplyr::all_of(cycle_cols)) %>%
+  tab_spanner(label = "Design balance", columns = c(clusters, plots_all, pct_all)) %>%
+  cols_label(total = "Total plot-cycles", clusters = "Clusters",
+             plots_all = "Plots in all cycles", pct_all = "% of plots") %>%
+  fmt_number(columns = dplyr::all_of(c(cycle_cols, "total", "clusters", "plots_all")),
+             decimals = 0, use_seps = TRUE) %>%
+  fmt_percent(columns = pct_all, decimals = 0) %>%
+  cols_align(align = "center", columns = -PSU_u) %>%
+  tab_style(style = cell_fill(color = "#FBE3E0"),
+            locations = cells_body(rows = tab_out$flag)) %>%
+  tab_style(style = cell_text(weight = "bold"),
+            locations = list(cells_body(rows = tab_out$PSU_u == "Total"),
+                             cells_stub(rows = tab_out$PSU_u == "Total"))) %>%
+  tab_footnote(
+    footnote = paste0("Shaded rows were flagged for review: fewer than ", min_plots_per_cycle,
+                      " plots in any cycle, or fewer than ",
+                      round(100 * min_all_cycle_pct), "% of plots sampled in all ",
+                      n_cycles, " cycles.")) %>%
+  tab_source_note("One plot contributes one observation per functional group per cycle.") %>%
+  tab_options(table.font.size = 11, data_row.padding = px(3),
+              heading.align = "left", table.border.top.style = "none",
+              column_labels.font.weight = "bold",
+              row_group.font.weight = "bold")
+tab_gt
+
+## ---- 7. Save -----------------------------------------------------------------
+out_dir <- "./tables"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+gtsave(tab_gt, file.path(out_dir, "psu_plots_by_cycle.html"))
+gtsave(tab_gt, file.path(out_dir, "psu_plots_by_cycle.docx"))
+# gtsave(tab_gt, file.path(out_dir, "psu_plots_by_cycle.docx"))   # needs a recent gt version
+# gtsave(tab_gt, file.path(out_dir, "psu_plots_by_cycle.png"))    # needs webshot2 and Chrome
+write.csv(tab_full, file.path(out_dir, "psu_plots_by_cycle.csv"), row.names = FALSE)
+
+
+#use the flags on PSU 
+keep_psu <- tab_full$PSU_u[!tab_full$flag]
+drop_psu <- tab_full$PSU_u[tab_full$flag]
+length(keep_psu); drop_psu                      # check before dropping
+
+vg_mdl.keep <- vg_mdl.new[as.character(vg_mdl.new$PSU_u) %in% keep_psu, ]
+vg_mdl.keep <- droplevels(vg_mdl.keep)          # unused PSU, cluster, and region levels removed
+
+
+
+
+###############
+#Table summary version 2: Only across C2 and C3
+## ---- Settings: choose and report these ---------------------------------------
+ref_cycles            <- c("C2", "C3")   # cycles that define "present" and drive the flags
+min_plots_per_cluster <- 2               # plots needed in a cluster in EACH ref cycle (2 is stricter)
+min_plots_per_cycle   <- 40              # placeholder: flag a PSU if any ref cycle has fewer plots
+min_all_cycle_pct     <- 0.80            # placeholder: flag a PSU if fewer plots were sampled in all ref cycles
+
+## ---- 1. Observations available to the models ---------------------------------
+need <- c("p_b", "Region", "PSU_u", "Cl_u", "PlotID", "Cycle")
+
+obs <- dat %>%
+  dplyr::filter(FNCODE %in% c("ridge", "slough", "transition")) %>%
+  dplyr::filter(dplyr::if_all(dplyr::all_of(need), ~ !is.na(.x))) %>%
+  dplyr::distinct(Region, PSU_u, Cl_u, PlotID, Cycle) %>%
+  dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
+
+stopifnot(all(ref_cycles %in% unique(obs$Cycle)))
+
+## ---- 2. Clusters present in every reference cycle ----------------------------
+cl_ok <- obs %>%
+  dplyr::filter(Cycle %in% ref_cycles) %>%
+  dplyr::group_by(Region, PSU_u, Cl_u, Cycle) %>%
+  dplyr::summarise(n = dplyr::n_distinct(PlotID), .groups = "drop") %>%
+  dplyr::filter(n >= min_plots_per_cluster) %>%
+  dplyr::group_by(Region, PSU_u, Cl_u) %>%
+  dplyr::summarise(n_ref = dplyr::n_distinct(Cycle), .groups = "drop") %>%
+  dplyr::filter(n_ref == length(ref_cycles))
+
+cl_total <- obs %>% dplyr::distinct(Region, PSU_u, Cl_u) %>%
+  dplyr::count(Region, PSU_u, name = "clusters_total")
+cl_keep  <- cl_ok %>% dplyr::count(Region, PSU_u, name = "clusters_kept")
+
+obs_keep <- dplyr::semi_join(obs, cl_ok, by = c("Region", "PSU_u", "Cl_u"))
+
+## ---- 3. Plots per PSU per cycle, retained clusters only ----------------------
+by_cycle <- obs_keep %>%
+  dplyr::group_by(Region, PSU_u, Cycle) %>%
+  dplyr::summarise(plots = dplyr::n_distinct(PlotID), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = Cycle, values_from = plots, values_fill = 0)
+
+cycle_cols <- sort(setdiff(names(by_cycle), c("Region", "PSU_u")))
+non_ref    <- setdiff(cycle_cols, ref_cycles)
+
+## ---- 4. Balance across the reference cycles ----------------------------------
+balance <- obs_keep %>%
+  dplyr::filter(Cycle %in% ref_cycles) %>%
+  dplyr::group_by(Region, PSU_u, Cl_u, PlotID) %>%
+  dplyr::summarise(n_cyc = dplyr::n_distinct(Cycle), .groups = "drop") %>%
+  dplyr::group_by(Region, PSU_u) %>%
+  dplyr::summarise(plots_all = sum(n_cyc == length(ref_cycles)),
+                   plots_any = dplyr::n(), .groups = "drop")
+
+## ---- 5. Combine and flag (all PSUs listed, including those with no clusters left)
+num_cols <- c(cycle_cols, "clusters_kept", "plots_all", "plots_any")
+
+tab_ref <- obs %>% dplyr::distinct(Region, PSU_u) %>%
+  dplyr::left_join(cl_total, by = c("Region", "PSU_u")) %>%
+  dplyr::left_join(cl_keep,  by = c("Region", "PSU_u")) %>%
+  dplyr::left_join(by_cycle, by = c("Region", "PSU_u")) %>%
+  dplyr::left_join(balance,  by = c("Region", "PSU_u")) %>%
+  dplyr::mutate(dplyr::across(dplyr::all_of(num_cols), ~ tidyr::replace_na(.x, 0))) %>%
+  dplyr::mutate(
+    total_ref = rowSums(dplyr::across(dplyr::all_of(ref_cycles))),
+    pct_all   = ifelse(plots_any > 0, plots_all / plots_any, 0),
+    min_ref   = do.call(pmin, dplyr::across(dplyr::all_of(ref_cycles))),
+    flag      = min_ref < min_plots_per_cycle | pct_all < min_all_cycle_pct
+  ) %>%
+  dplyr::arrange(Region, PSU_u)
+
+## ---- 6. Totals row ------------------------------------------------------------
+tot <- tab_ref %>%
+  dplyr::summarise(dplyr::across(dplyr::all_of(c(num_cols, "clusters_total", "total_ref")), sum)) %>%
+  dplyr::mutate(Region = "All regions", PSU_u = "Total",
+                pct_all = plots_all / plots_any, flag = FALSE)
+
+tab_ref_out <- dplyr::bind_rows(tab_ref, tot)
+
+## ---- 7. Press-ready table -----------------------------------------------------
+ref_lab <- paste(ref_cycles, collapse = " + ")
+
+tab_gt <- tab_ref_out %>%
+  dplyr::select(Region, PSU_u, dplyr::all_of(cycle_cols), total_ref,
+                clusters_total, clusters_kept, plots_all, pct_all) %>%
+  gt(groupname_col = "Region", rowname_col = "PSU_u") %>%
+  tab_header(
+    title    = "Sampling effort by PSU and cycle",
+    subtitle = paste0("Plots in clusters sampled in ", paste(ref_cycles, collapse = " and "))) %>%
+  tab_spanner(label = "Plots per cycle", columns = dplyr::all_of(cycle_cols)) %>%
+  tab_spanner(label = "Clusters", columns = c(clusters_total, clusters_kept)) %>%
+  tab_spanner(label = paste0("Balance (", ref_lab, ")"), columns = c(plots_all, pct_all)) %>%
+  cols_label(total_ref = paste0("Plot-cycles (", ref_lab, ")"),
+             clusters_total = "Sampled", clusters_kept = "Retained",
+             plots_all = "Plots in all", pct_all = "% of plots") %>%
+  fmt_number(columns = dplyr::all_of(c(cycle_cols, "total_ref", "clusters_total",
+                                       "clusters_kept", "plots_all")),
+             decimals = 0, use_seps = TRUE) %>%
+  fmt_percent(columns = pct_all, decimals = 0) %>%
+  cols_align(align = "center", columns = -PSU_u) %>%
+  tab_style(style = cell_fill(color = "#FBE3E0"),
+            locations = cells_body(rows = tab_ref_out$flag)) %>%
+  tab_style(style = cell_text(weight = "bold"),
+            locations = list(cells_body(rows = tab_ref_out$PSU_u == "Total"),
+                             cells_stub(rows = tab_ref_out$PSU_u == "Total"))) %>%
+  tab_footnote(footnote = paste0(
+    "Only clusters with data in ", paste(ref_cycles, collapse = " and "),
+    " are counted. Shaded rows were flagged for review: fewer than ", min_plots_per_cycle,
+    " plots in any of those cycles, or fewer than ", round(100 * min_all_cycle_pct),
+    "% of plots sampled in all of them.")) %>%
+  tab_source_note("One plot contributes one observation per functional group per cycle.") %>%
+  tab_options(table.font.size = 11, data_row.padding = px(3), heading.align = "left",
+              table.border.top.style = "none", column_labels.font.weight = "bold",
+              row_group.font.weight = "bold")
+
+if (length(non_ref) > 0) {                       # show non-reference cycles as informational
+  tab_gt <- tab_style(tab_gt, style = cell_text(color = "grey55", style = "italic"),
+                      locations = cells_body(columns = dplyr::all_of(non_ref)))
+}
+tab_gt
+
+## ---- 8. Save ------------------------------------------------------------------
+out_dir <- "./tables"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+gtsave(tab_gt, file.path(out_dir, "psu_plots_by_cycle_C2C3_v2.html"))
+gtsave(tab_gt, file.path(out_dir, "psu_plots_by_cycle_C2C3_v2.docx"))
+
+write.csv(tab_ref, file.path(out_dir, "psu_plots_by_cycle_C2C3_v2.csv"), row.names = FALSE)
+
 
 #Plot the analytical design
 #1. Regions: bars by habitat, coloured by functional group
 library(dplyr); library(ggplot2); library(forcats)
 
 fn_cols <- c(ridge = "#2E7D32", slough = "#1976D2", transition = "#F9A825")
-<<<<<<< HEAD
 lvh <- c("ridge", "slough", "trans")
-=======
-lvh <- c("ridge", "slough", "transition")
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 lvf <- c("ridge", "slough", "transition", "UK")
 
 plot_cov <- vg_mdl.new %>%
-  dplyr::filter(hab_09 %in% lvh, FNCODE %in% lvf) %>%
-  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, PlotID, hab_09, FNCODE) %>%
+  dplyr::filter(hab_25 %in% lvh, FNCODE %in% lvf) %>%
+  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, PlotID, hab_25, FNCODE) %>%
   dplyr::summarise(cover = mean(total_cover, na.rm = TRUE), .groups = "drop") %>%
   dplyr::mutate(FNCODE = factor(FNCODE, levels = lvf),
-<<<<<<< HEAD
-         hab_09 = factor(hab_09, levels = lvh))
-=======
-         hab_09 = factor(hab_09, levels = lvh), Cycle  = factor(Cycle))
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
+         hab_25 = factor(hab_25, levels = lvh))
+
 
 summ_level <- function(df, level) {
   df %>%
-    dplyr::group_by(across(all_of(c(level, "hab_09", "FNCODE")))) %>%
+    dplyr::group_by(across(all_of(c(level, "hab_25", "FNCODE")))) %>%
     dplyr::summarise(n_plots = n(), mean = mean(cover), se = sd(cover) / sqrt(n_plots),
               .groups = "drop")
 }
 #####cover by cycle
 plot_cov_cyc <- vg_mdl.new %>%
-  dplyr::filter(hab_09 %in% lvh, FNCODE %in% lvf) %>%
-  dplyr::group_by(Region, PSU_u, ClusterID,  Cl_u, PlotID, hab_09, FNCODE, Cycle) %>%
+  dplyr::filter(hab_25 %in% lvh, FNCODE %in% lvf) %>%
+  dplyr::group_by(Region, PSU_u, ClusterID,  Cl_u, PlotID, hab_25, FNCODE, Cycle) %>%
   dplyr::summarise(cover = mean(total_cover, na.rm = TRUE), .groups = "drop") %>%
   dplyr::mutate(FNCODE = factor(FNCODE, levels = lvf),
-                hab_09 = factor(hab_09, levels = lvh),
+                hab_25 = factor(hab_25, levels = lvh),
                 Cycle  = factor(Cycle))
 
 summ_level_cyc <- function(df, level) {
   df %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(c(level, "hab_09", "FNCODE", "Cycle")))) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c(level, "hab_25", "FNCODE", "Cycle")))) %>%
     dplyr::summarise(n_plots = dplyr::n(), mean = mean(cover),
                      se = sd(cover) / sqrt(n_plots), .groups = "drop")
 }
 table(plot_cov_cyc$Cycle)
-vg_mdl.new %>% dplyr::distinct(PlotID, Cycle, hab_09) %>%
-  dplyr::count(PlotID, hab_09) %>% dplyr::count(n)   # most plots should have n = 3
+vg_mdl.new %>% dplyr::distinct(PlotID, Cycle, hab_25) %>%
+  dplyr::count(PlotID, hab_25) %>% dplyr::count(n)   # most plots should have n = 3
 
 
 p_region_cyc <- summ_level_cyc(plot_cov_cyc, "Region") %>%
@@ -373,26 +616,23 @@ p_region_cyc <- summ_level_cyc(plot_cov_cyc, "Region") %>%
   geom_point(size = 1.8) +
   geom_errorbar(aes(ymin = pmax(mean - se, 0), ymax = mean + se),
                 width = 0.15, na.rm = TRUE) +
-  facet_grid(hab_09 ~ Region) +
+  facet_grid(hab_25 ~ Region) +
   scale_colour_manual(values = fn_cols, name = "Species functional group") +
   labs(x = "Cycle", y = "Mean percent cover (%)",
-       subtitle = "Rows = habitat (hab_09); columns = region") +
+       subtitle = "Rows = habitat (hab_25); columns = region") +
   theme_bw() +
   theme(legend.position = "bottom",
         strip.text.x = element_text(size = 7))
 p_region_cyc
 
-<<<<<<< HEAD
+
 ggsave(paste0('./figures/func_hab/Ftype_by_hab_in_RegionXcycle.jpeg'), 
-=======
-ggsave(paste0('./figures/func_hab/Ftyope_by_hab_in_RegionXcycle.jpeg'), 
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
-       plot = p_region_cyc, width = 10, height = 10, dpi = 400, device = "jpeg")
+       plot = p_region_cyc, width = 15, height = 10, dpi = 400, device = "jpeg")
 
 #####################
 2. Cover by Cluster and Cycle
 cl_means_cyc <- plot_cov_cyc %>%
-  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, hab_09, FNCODE, Cycle) %>%
+  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, hab_25, FNCODE, Cycle) %>%
   dplyr::summarise(cover = mean(cover), n_plots = dplyr::n(), .groups = "drop") %>%
   dplyr::filter(n_plots >= 2)
 
@@ -402,7 +642,7 @@ p_cluster_cyc <- ggplot(cl_means_cyc, aes(Cycle, cover, fill = FNCODE)) +
   geom_point(aes(colour = FNCODE),
              position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8),
              size = 0.5, alpha = 0.3, show.legend = FALSE) +
-  facet_wrap(~ hab_09, nrow = 1) +
+  facet_wrap(~ hab_25, nrow = 1) +
   scale_fill_manual(values = fn_cols, name = "Species functional group") +
   scale_colour_manual(values = fn_cols) +
   labs(x = "Cycle", y = "Cluster-mean percent cover (%)") +
@@ -410,9 +650,9 @@ p_cluster_cyc <- ggplot(cl_means_cyc, aes(Cycle, cover, fill = FNCODE)) +
 p_cluster_cyc
 
 # by region as well
-p_cluster_cyc_reg <- p_cluster_cyc + facet_grid(hab_09 ~ Region)
+p_cluster_cyc_reg <- p_cluster_cyc + facet_grid(hab_25 ~ Region)
 p_cluster_cyc_reg
-<<<<<<< HEAD
+
 out_dir <- "./figures/func_hab"
 
 ggsave(file.path(out_dir, "cover_by_cluster_cycle.png"),
@@ -421,16 +661,6 @@ ggsave(file.path(out_dir, "cover_by_cluster_cycle_region.png"),
        plot = p_cluster_cyc_reg, width = 16, height = 7, dpi = 300)
 
 
-=======
-
-ggsave(file.path(out_dir, "cover_by_cluster_cycle.png"),
-       p_cluster_cyc, width = 9, height = 5, dpi = 300)
-ggsave(file.path(out_dir, "cover_by_cluster_cycle_region.png"),
-       p_cluster_cyc_reg, width = 16, height = 7, dpi = 300)
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
-
-################################
-
 
 # the PSUs actually present in your data (avoids unused factor levels)
 psu_list <- sort(unique(as.character(cl_means_cyc$PSU_u)))
@@ -438,7 +668,7 @@ length(psu_list)    # should be 11
 
 # unfiltered cluster means, so min_plots is applied inside the function
 cl_means_all <- plot_cov_cyc %>%
-  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, hab_09, FNCODE, Cycle) %>%
+  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, hab_25, FNCODE, Cycle) %>%
   dplyr::summarise(cover = mean(cover), n_plots = dplyr::n(), .groups = "drop")
 
 plot_psu_cycle <- function(psu, min_plots = 2, ymax = NULL) {
@@ -451,7 +681,7 @@ plot_psu_cycle <- function(psu, min_plots = 2, ymax = NULL) {
     geom_point(aes(colour = FNCODE),
                position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8),
                size = 0.8, alpha = 0.5, show.legend = FALSE) +
-    facet_wrap(~ hab_09, nrow = 1) +
+    facet_wrap(~ hab_25, nrow = 1) +
     scale_fill_manual(values = fn_cols, name = "Species functional group") +
     scale_colour_manual(values = fn_cols) +
     coord_cartesian(ylim = c(0, 100)) +
@@ -479,33 +709,43 @@ for (p in psu_list) {
 #See each PSUs trajectory
 plot_psu_traj <- function(psu, min_plots = 2) {
   d <- cl_means_all %>%
-    dplyr::filter(as.character(PSU_u) == psu, n_plots >= min_plots)
+    dplyr::filter(as.character(PSU_u) == psu, n_plots >= min_plots) %>%
+    as.data.frame()
+  d$hab_25 <- as.character(d$hab_25)
+  d$FNCODE <- as.character(d$FNCODE)
+  d$Cycle  <- factor(d$Cycle)
+  d <- d[d$FNCODE %in% names(fn_cols), ]
+  
+  stopifnot(nrow(d) > 0)
   
   ggplot(d, aes(Cycle, cover, group = Cl_u, colour = FNCODE)) +
     geom_line(alpha = 0.5) + geom_point(size = 1) +
-    facet_grid(hab_09 ~ FNCODE) +
+    facet_grid(rows = vars(hab_25), cols = vars(FNCODE)) +
     scale_colour_manual(values = fn_cols, guide = "none") +
-    labs(title = paste0("PSU ", psu), x = "Cycle", y = "Cluster-mean percent cover (%)") +
+    labs(title = paste0("PSU ", psu), x = "Cycle",
+         y = "Cluster-mean percent cover (%)") +
     theme_bw()
 }
+
 plot_psu_traj(psu_list[1])
+
 for (p in psu_list) {
   ggsave(file.path(out_dir, paste0("cluster_cover_cycle_PSU_traj", p, ".png")),
          plot_psu_traj(p), width = 9, height = 5, dpi = 300)
 }
-<<<<<<< HEAD
+
 pdf(file.path(out_dir, "cluster_cover_by_psu_cycle_PSU_traj.pdf"), width = 9, height = 5)
 for (p in psu_list) print(plot_psu_traj(p))
 dev.off()
 
-=======
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
+
+
 ####################
 #2. PSUs: heatmap with one row per PSU
 
 psu_sum <- summ_level(plot_cov, "PSU_u") %>%
   dplyr::left_join(distinct(plot_cov, PSU_u, Region), by = "PSU_u") %>%
-  dplyr::mutate(combo = interaction(hab_09, FNCODE, sep = " | ", lex.order = TRUE),
+  dplyr::mutate(combo = interaction(hab_25, FNCODE, sep = " | ", lex.order = TRUE),
          PSU_u = fct_rev(fct_inorder(as.character(PSU_u))))
 
 p_psu <- ggplot(psu_sum, aes(combo, PSU_u, fill = mean)) +
@@ -519,20 +759,45 @@ p_psu <- ggplot(psu_sum, aes(combo, PSU_u, fill = mean)) +
         strip.text.y = element_text(angle = 0, size = 7),
         legend.position = "right")
 p_psu
-<<<<<<< HEAD
-ggsave(file.path(out_dir, "cover_by_psu.png"),  plot =p_psu,     width = 8,  height = 12, dpi = 300)
-=======
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
+ggsave(file.path(out_dir, "cover_by_psu.png"),  plot =p_psu,     width = 8,  height = 12, dpi = 300)
+
+#####################
+#2a. Include cycle as a grouping attribute for the plot count heat map
+psu_sum_cyc <- summ_level_cyc(plot_cov_cyc, "PSU_u") %>%
+  dplyr::left_join(dplyr::distinct(plot_cov_cyc, PSU_u, Region), by = "PSU_u")
+
+p_psu_cyc <- ggplot(psu_sum_cyc, aes(Cycle, hab_25, fill = mean)) +
+  geom_tile(colour = "white", linewidth = 0.2) +
+  facet_grid(FNCODE ~ Region + PSU_u, scales = "free_x", space = "free_x") +
+  scale_fill_viridis_c(name = "Mean cover (%)", option = "C",
+                       limits = c(0, 100), na.value = "grey90") +
+  labs(x = "Cycle (within PSU, grouped by region)",
+       y = "Habitat (hab_25)",
+       subtitle = "Rows = species functional group; columns = region, then PSU") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 6),
+        strip.text.x = element_text(size = 7),
+        strip.text.y = element_text(size = 8),
+        panel.spacing.x = unit(0.15, "lines"),
+        legend.position = "bottom")
+p_psu_cyc
+
+ggsave(file.path("./figures/func_hab", "cover_by_psu_cycle_heatmap.png"),
+       p_psu_cyc, width = 26, height = 6, dpi = 300)
+
+pdf(file.path(out_dir, "clusters_by_psuXcycle.pdf"), width = 9, height = 6)
+ for (p in levels(psu_sum_cyc$PSU_u)) print(p_psu_cyc(p))
+ dev.off()
 #####################
 #3. Clusters: how to show 16 clusters × 53 PSUs
 
 cl_means <- plot_cov %>%
-  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, hab_09, FNCODE) %>%
+  dplyr::group_by(Region, PSU_u, ClusterID, Cl_u, hab_25, FNCODE) %>%
   dplyr::summarise(cover = mean(cover), n_plots = n(), .groups = "drop") %>%
   dplyr::filter(n_plots >= 2)
 
-p_cluster <- ggplot(cl_means, aes(hab_09, cover, fill = FNCODE)) +
+p_cluster <- ggplot(cl_means, aes(hab_25, cover, fill = FNCODE)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.6,
                position = position_dodge(0.8), width = 0.7) +
   geom_point(aes(colour = FNCODE),
@@ -540,52 +805,30 @@ p_cluster <- ggplot(cl_means, aes(hab_09, cover, fill = FNCODE)) +
              size = 0.5, alpha = 0.35, show.legend = FALSE) +
   scale_fill_manual(values = fn_cols, name = "Species functional group") +
   scale_colour_manual(values = fn_cols) +
-  labs(x = "Habitat (hab_09)", y = "Cluster-mean percent cover (%)") +
+  labs(x = "Habitat (hab_25)", y = "Cluster-mean percent cover (%)") +
   theme_bw() + theme(legend.position = "bottom")
 
 p_cluster + facet_wrap(~ Region, ncol = 5)
-<<<<<<< HEAD
+
+
 ggsave(file.path(out_dir, "cover_by_cluster.png"),
        p_cluster + facet_wrap(~ Region, ncol = 5),
        width = 12, height = 6, dpi = 300)
 graphics.off()
-=======
 
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
-plot_psu_clusters <- function(psu) {
-  plot_cov %>%
-    dplyr::filter(PSU_u == psu) %>%
-    dplyr::group_by(ClusterID, hab_09, FNCODE) %>%
-    dplyr::summarise(cover = mean(cover), n_plots = n(), .groups = "drop") %>%
-    ggplot(aes(hab_09, factor(ClusterID), fill = cover)) +
-    geom_tile(colour = "white") +
-    geom_text(aes(label = n_plots), size = 2.5, colour = "white") +
-    facet_wrap(~ FNCODE, nrow = 1) +
-    scale_fill_viridis_c(name = "Mean cover (%)", option = "C", na.value = "grey90",
-                         limits = c(0, 100)) +
-    labs(title = paste("PSU", psu), x = "Habitat (hab_09)", y = "Cluster",
-         subtitle = "Number = plots in the cluster with that habitat") +
-    theme_bw()
-}
-
-plot_psu_clusters(levels(plot_cov$PSU_u)[1])
 
 # save one page per PSU
-<<<<<<< HEAD
-# out_dir <- "./figures/func_hab"
-# dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-=======
-out_dir <- "./figures/func_hab"
-dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
->>>>>>> 8157609bf5dd06584f01c6847b3ca4a2ef67bf77
 
-pdf(file.path(out_dir, "clusters_by_psu.pdf"), width = 9, height = 6)
+out_dir <- "./figures/func_hab"
+# dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+pdf(file.path(out_dir, "clusters_by_psu.pdf"), width = 9, height = 6) #messed up
 for (p in levels(plot_cov$PSU_u)) print(plot_psu_clusters(p))
 dev.off()
 
 #save plots#
-<<<<<<< HEAD
+
 ggsave(file.path(out_dir, "cover_by_cluster.png"),
        p_cluster + facet_wrap(~ Region, ncol = 5),
        width = 12, height = 6, dpi = 300)
@@ -641,6 +884,7 @@ plot(Variogram(m_s, form = ~ x + yc, resType = "normalized", data = d_r,
 
 m_exp <- update(m_s, correlation = corExp(form = ~ x + yc, nugget = TRUE))
 m_sph <- update(m_s, correlation = corSpher(form = ~ x + yc, nugget = TRUE))
+
 AIC(m_s, m_exp, m_sph)
 
 
@@ -687,9 +931,9 @@ for (PSU in psu_cur){
   head(veg_mdl.new_PSU)
   
   # summarySE provides the standard deviation, standard error of the mean, and a (default 95%) confidence interval
-  stats <- summarySE(veg_anl_PSU, measurevar="Cover", groupvars=c("Cycle","SPCODE","hab_09"))
+  stats <- summarySE(veg_anl_PSU, measurevar="Cover", groupvars=c("Cycle","SPCODE","hab_25"))
  
-  p <- ggplot(veg_anl_PSU, aes(x = Cycle, y = total_cover, group = hab_09, color=hab_09)) +
+  p <- ggplot(veg_anl_PSU, aes(x = Cycle, y = total_cover, group = hab_25, color=hab_25)) +
     geom_line(aes(group = PlotID), colour = "grey70", alpha = 0.7) +
     geom_point(aes(group = PlotID), colour = "grey30", size = 1.5) +
     #geom_errorbar() +
