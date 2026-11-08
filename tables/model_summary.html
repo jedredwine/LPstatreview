@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+
+
+</head>
+<body>
+<div id="xxbricllug" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+  <style>#xxbricllug table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#xxbricllug thead, #xxbricllug tbody, #xxbricllug tfoot, #xxbricllug tr, #xxbricllug td, #xxbricllug th {
+  border-style: none;
+}
+
+#xxbricllug p {
+  margin: 0;
+  padding: 0;
+}
+
+#xxbricllug .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 11px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: none;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#xxbricllug .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#xxbricllug .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#xxbricllug .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#xxbricllug .gt_heading {
+  background-color: #FFFFFF;
+  text-align: left;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xxbricllug .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xxbricllug .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xxbricllug .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: bold;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#xxbricllug .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: bold;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#xxbricllug .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#xxbricllug .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#xxbricllug .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#xxbricllug .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#xxbricllug .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#xxbricllug .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#xxbricllug .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#xxbricllug .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#xxbricllug .gt_row {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#xxbricllug .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xxbricllug .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#xxbricllug .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#xxbricllug .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#xxbricllug .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xxbricllug .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#xxbricllug .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#xxbricllug .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xxbricllug .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xxbricllug .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#xxbricllug .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xxbricllug .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#xxbricllug .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xxbricllug .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xxbricllug .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xxbricllug .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xxbricllug .gt_sourcenote {
+  font-size: 9px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xxbricllug .gt_left {
+  text-align: left;
+}
+
+#xxbricllug .gt_center {
+  text-align: center;
+}
+
+#xxbricllug .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#xxbricllug .gt_font_normal {
+  font-weight: normal;
+}
+
+#xxbricllug .gt_font_bold {
+  font-weight: bold;
+}
+
+#xxbricllug .gt_font_italic {
+  font-style: italic;
+}
+
+#xxbricllug .gt_super {
+  font-size: 65%;
+}
+
+#xxbricllug .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#xxbricllug .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#xxbricllug .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#xxbricllug .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#xxbricllug .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#xxbricllug .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#xxbricllug .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#xxbricllug .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#xxbricllug div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+  <table class="gt_table" style="table-layout:fixed;" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <colgroup>
+    <col/>
+    <col style="width:200px;"/>
+    <col style="width:95px;"/>
+    <col style="width:150px;"/>
+    <col style="width:170px;"/>
+    <col style="width:340px;"/>
+    <col style="width:80px;"/>
+  </colgroup>
+  <thead>
+    <tr class="gt_heading">
+      <td colspan="7" class="gt_heading gt_title gt_font_normal" style>Candidate models for functional-group cover</td>
+    </tr>
+    <tr class="gt_heading">
+      <td colspan="7" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Ordered from simplest to most complex</td>
+    </tr>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="a::stub"></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Description">Description</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Builds_on">Builds on</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Fixed">Fixed effects</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Random">Random effects</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Predictor">Linear predictor</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="k">Parameters (k)</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr class="gt_group_heading_row">
+      <th colspan="7" class="gt_group_heading" style="font-weight: bold;" scope="colgroup" id="A.-Baseline">A. Baseline</th>
+    </tr>
+    <tr class="gt_row_group_first"><th id="stub_1_1" scope="row" class="gt_row gt_left gt_stub">M0</th>
+<td headers="A.-Baseline stub_1_1 Description" class="gt_row gt_left">Null: intercept only</td>
+<td headers="A.-Baseline stub_1_1 Builds_on" class="gt_row gt_left">—</td>
+<td headers="A.-Baseline stub_1_1 Fixed" class="gt_row gt_left">β₀</td>
+<td headers="A.-Baseline stub_1_1 Random" class="gt_row gt_left">none</td>
+<td headers="A.-Baseline stub_1_1 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀</td>
+<td headers="A.-Baseline stub_1_1 k" class="gt_row gt_center">3</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="7" class="gt_group_heading" style="font-weight: bold;" scope="colgroup" id="B.-Repeated-measures,-time-and-spatial-grouping">B. Repeated measures, time and spatial grouping</th>
+    </tr>
+    <tr class="gt_row_group_first"><th id="stub_1_2" scope="row" class="gt_row gt_left gt_stub">M1</th>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_2 Description" class="gt_row gt_left">+ plot random intercept (repeated measures only)</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_2 Builds_on" class="gt_row gt_left">M0</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_2 Fixed" class="gt_row gt_left">β₀</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_2 Random" class="gt_row gt_left">plot</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_2 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀ + cⱼₖₗ</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_2 k" class="gt_row gt_center">4</td></tr>
+    <tr><th id="stub_1_3" scope="row" class="gt_row gt_left gt_stub">M2</th>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_3 Description" class="gt_row gt_left">+ Cycle (fixed)</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_3 Builds_on" class="gt_row gt_left">M1</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_3 Fixed" class="gt_row gt_left">β₀, Cycle</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_3 Random" class="gt_row gt_left">plot</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_3 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀ + δₜ + cⱼₖₗ</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_3 k" class="gt_row gt_center">6</td></tr>
+    <tr><th id="stub_1_4" scope="row" class="gt_row gt_left gt_stub">M3</th>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_4 Description" class="gt_row gt_left">+ cluster random intercept</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_4 Builds_on" class="gt_row gt_left">M2</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_4 Fixed" class="gt_row gt_left">β₀, Cycle</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_4 Random" class="gt_row gt_left">plot, cluster</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_4 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀ + δₜ + bⱼₖ + cⱼₖₗ</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_4 k" class="gt_row gt_center">7</td></tr>
+    <tr><th id="stub_1_5" scope="row" class="gt_row gt_left gt_stub">M4</th>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_5 Description" class="gt_row gt_left">+ PSU random intercept</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_5 Builds_on" class="gt_row gt_left">M3</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_5 Fixed" class="gt_row gt_left">β₀, Cycle</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_5 Random" class="gt_row gt_left">plot, cluster, PSU</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_5 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀ + δₜ + aⱼ + bⱼₖ + cⱼₖₗ</td>
+<td headers="B.-Repeated-measures,-time-and-spatial-grouping stub_1_5 k" class="gt_row gt_center">8</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="7" class="gt_group_heading" style="font-weight: bold;" scope="colgroup" id="C.-Regional-effects-as-fixed-categories">C. Regional effects as fixed categories</th>
+    </tr>
+    <tr class="gt_row_group_first"><th id="stub_1_6" scope="row" class="gt_row gt_left gt_stub">M5</th>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_6 Description" class="gt_row gt_left">+ Region (fixed)</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_6 Builds_on" class="gt_row gt_left">M4</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_6 Fixed" class="gt_row gt_left">β₀, Cycle, Region</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_6 Random" class="gt_row gt_left">plot, cluster, PSU</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_6 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀ + αᵣ + δₜ + aⱼ + bⱼₖ + cⱼₖₗ</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_6 k" class="gt_row gt_center">17</td></tr>
+    <tr><th id="stub_1_7" scope="row" class="gt_row gt_left gt_stub">M6</th>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_7 Description" class="gt_row gt_left">+ Region x Cycle (fixed)</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_7 Builds_on" class="gt_row gt_left">M5</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_7 Fixed" class="gt_row gt_left">β₀, Cycle, Region, Region × Cycle</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_7 Random" class="gt_row gt_left">plot, cluster, PSU</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_7 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀ + αᵣ + δₜ + (αδ)ᵣₜ + aⱼ + bⱼₖ + cⱼₖₗ</td>
+<td headers="C.-Regional-effects-as-fixed-categories stub_1_7 k" class="gt_row gt_center">35</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="7" class="gt_group_heading" style="font-weight: bold;" scope="colgroup" id="D.-Median-ridge-cover-(X)-as-predictor">D. Median ridge cover (X) as predictor</th>
+    </tr>
+    <tr class="gt_row_group_first"><th id="stub_1_8" scope="row" class="gt_row gt_left gt_stub">M7</th>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_8 Description" class="gt_row gt_left">X fixed slope (beta1), replaces Region</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_8 Builds_on" class="gt_row gt_left">M4</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_8 Fixed" class="gt_row gt_left">β₀, Cycle, X</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_8 Random" class="gt_row gt_left">plot, cluster, PSU</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_8 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = β₀ + β₁Xⱼ + δₜ + aⱼ + bⱼₖ + cⱼₖₗ</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_8 k" class="gt_row gt_center">9</td></tr>
+    <tr><th id="stub_1_9" scope="row" class="gt_row gt_left gt_stub">M8</th>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_9 Description" class="gt_row gt_left">+ random intercept u0i</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_9 Builds_on" class="gt_row gt_left">M7</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_9 Fixed" class="gt_row gt_left">β₀, Cycle, X</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_9 Random" class="gt_row gt_left">plot, cluster, PSU, Region intercept</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_9 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = (β₀ + u₀ᵣ) + β₁Xⱼ + δₜ + aⱼ + bⱼₖ + cⱼₖₗ</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_9 k" class="gt_row gt_center">10</td></tr>
+    <tr><th id="stub_1_10" scope="row" class="gt_row gt_left gt_stub">M9</th>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_10 Description" class="gt_row gt_left">+ random slope gamma_i (correlated with u0i)</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_10 Builds_on" class="gt_row gt_left">M8</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_10 Fixed" class="gt_row gt_left">β₀, Cycle, X</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_10 Random" class="gt_row gt_left">plot, cluster, PSU, Region intercept and X slope (correlated)</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_10 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = (β₀ + u₀ᵣ) + (β₁ + γᵣ)Xⱼ + δₜ + aⱼ + bⱼₖ + cⱼₖₗ</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_10 k" class="gt_row gt_center">12</td></tr>
+    <tr><th id="stub_1_11" scope="row" class="gt_row gt_left gt_stub">M10</th>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_11 Description" class="gt_row gt_left">+ random slope gamma_i (uncorrelated with u0i)</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_11 Builds_on" class="gt_row gt_left">M9, correlation fixed at 0</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_11 Fixed" class="gt_row gt_left">β₀, Cycle, X</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_11 Random" class="gt_row gt_left">plot, cluster, PSU, Region intercept and X slope (uncorrelated)</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_11 Predictor" class="gt_row gt_left" style="font-family: 'Cambria Math', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';">η = (β₀ + u₀ᵣ) + (β₁ + γᵣ)Xⱼ + δₜ + aⱼ + bⱼₖ + cⱼₖₗ</td>
+<td headers="D.-Median-ridge-cover-(X)-as-predictor stub_1_11 k" class="gt_row gt_center">11</td></tr>
+  </tbody>
+  <tfoot>
+    <tr class="gt_sourcenotes">
+      <td class="gt_sourcenote" colspan="7">Indices: r = region, j = PSU, k = cluster, l = plot, t = cycle. η is the logit of the conditional beta mean μ.</td>
+    </tr>
+    <tr class="gt_sourcenotes">
+      <td class="gt_sourcenote" colspan="7">Response: cover proportion y. With probability π (logit π = ζ₀, constant) y = 0; otherwise y ~ Beta(μφ, (1 − μ)φ) with constant precision φ. Family and zero-inflation are identical in every model.</td>
+    </tr>
+    <tr class="gt_sourcenotes">
+      <td class="gt_sourcenote" colspan="7">Fixed: Cycle (δₜ), Region (αᵣ), Region × Cycle ((αδ)ᵣₜ). Random: aⱼ ~ N(0, σ²PSU), bⱼₖ ~ N(0, σ²cluster), cⱼₖₗ ~ N(0, σ²plot), independent; (u₀ᵣ, γᵣ) ~ N(0, Σ), with Σ unstructured in M9 and diagonal in M10.</td>
+    </tr>
+    <tr class="gt_sourcenotes">
+      <td class="gt_sourcenote" colspan="7">X: z-scored median ridge cover at the PSU level; β₁ is the logit change per SD of X. k counts all estimated parameters, including the zero-inflation intercept and precision.</td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+</body>
+</html>
